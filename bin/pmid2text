@@ -1,0 +1,191 @@
+#! /usr/bin/perl -w
+
+#use lib "$ENV{HOME}/lib/biblio";
+use PubMed;
+use Citation;
+use Globals;
+
+$MaxNAuthors = 4;
+
+# Option flags:
+my $do_indent     = 1;
+my $sort_by_year  = 0;
+my $show_abstract = 0;
+my $show_url      = 0;
+my $just_the_url  = 0;
+my $write_html    = 0;
+my $use_biblio    = 0;
+my $use_pubmed    = 0;
+my $operate_quietly = 0;
+
+my $usage = "Usage: pmid2text [<options>] [<pubmed identifier>+]
+
+Options: 
+   -u, -h, --help
+            This text.
+   -i       No indentation of citations.
+   -y       Sort by publication year.
+   -a       Show abstract.
+   -w       Show an URL for retrieving article via PubMed.
+   -www     Show only the URL and nothing more.
+   -b       Show a sole link to Biblio.
+   -p       Show a link to abstracts at PubMed.
+   -n <int> Max number of authors without using \"et al\". Set to
+            zero to show all authors.
+   -html    Output as HTML for inclusion on a web page.
+   -q       Quiet. No extraneous output.
+
+If no PMID is given on the command line, STDIN is read until EOF
+and parsed for PMID:s. The expected format is a PMID first on each
+line, possibly followed by a space and any string.
+
+See also home page at http://www.nada.kth.se/~arve/biblio.
+";
+
+###
+
+sub year_cmp {
+  my ($a, $b) = @_;
+
+  $a =~ m/^(\d{4})/;
+  my $year1 = $1;
+  $b =~ m/^(\d{4})/;
+  my $year2 = $1;
+
+  return $year1 <=> $year2;
+}
+
+###
+
+
+my @pmids = ();
+
+while (my $opt = shift @ARGV) {
+  if ($opt eq '-u' || $opt eq '-h' || $opt eq '--help') {
+    print $usage;
+    exit 0;
+  }
+
+  if ($opt eq '-i') {
+    $do_indent = 0;
+  } elsif ($opt eq '-a') {
+    $show_abstract = 1;
+  } elsif ($opt eq '-b') {
+    $use_biblio = 1;
+  } elsif ($opt eq '-p') {
+    $use_pubmed = 1;
+  } elsif ($opt eq '-w') {
+    $show_url = 1;
+  } elsif ($opt eq '-www') {
+    $just_the_url = 1;
+  } elsif ($opt eq '-n') {
+    if (@ARGV) {
+      my $int = shift @ARGV;
+      if ($int =~ /\d+/ && $int >= 0) {
+	$MaxNAuthors = $int;
+      } else {
+	print STDERR "Argument to option '-n' must be an non-negative integer. Found '$int' instead.\n";
+	exit 2;
+      }
+    } else {
+      print STDERR "An integer is expected as an argument to option '-n'.\n";
+      exit 3;
+    }
+  } elsif ($opt eq '-html') {
+    $write_html = 1;
+  } elsif ($opt eq '-y') {
+    $sort_by_year = 1;
+  } elsif ($opt eq '-q') {
+    $operate_quietly = 1;
+  } elsif ($opt =~ m/\d+/) {
+    push @pmids, $opt;
+  } elsif (!$operate_quietly) {
+    print STDERR "Cannot use command line argument: '$opt'\n";
+  }
+}
+
+if (scalar(@pmids) == 0) {
+  while (<>) {
+    if (/^(\s*[+-]?\s*)(\d+)/) {
+      if (length($1) < 5) {
+	push @pmids, $2;
+      }
+    }
+  }
+}
+
+if (scalar(@pmids) == 0) {
+  if (!$operate_quietly) {
+    print STDERR "No PubMed identifiers.\n";
+  }
+  exit(0);
+}
+
+
+if ($use_biblio) {		# Show a link into biblio.cgb.ki.se
+  my $url = $BiblioUrl . "?suggestion=" . join(',', @pmids);
+#  my $count = scalar(@pmids);
+#  print "Here is a suggestion of $count interesting articles:\n\n$url\n\n";
+  print $url, "\n";
+} elsif ($use_pubmed) {
+  my $url = $Entrez . "/query.fcgi?cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids="
+    . join(',', @pmids);
+  print $url, "\n";
+} else {			# Regular output
+  my $art_h = pm_fetch_pubmed(\@pmids);
+  my @art_list = ();
+  if ($sort_by_year) {
+    @art_list = sort {year_cmp($art_h->{$a}{'DA'}, $art_h->{$b}{'DA'})} keys %$art_h;
+  } else {
+    @art_list = keys %$art_h;
+  }
+  foreach my $id (@art_list) {
+    my $citation;
+
+    if ($just_the_url) {
+      my $url = $art_h->{$id}{'PubMedURL'};
+      if (defined $url) {
+	print $url, "\n";
+      } else {
+	print STDERR "No URL for $id.\n";
+      }
+      next;
+    }
+
+    if ($write_html) {
+      $citation = make_html_citation($art_h->{$id});
+      printf("<!-- PMID: %d -->  %s\n", $id, $citation);
+    } else {
+      $citation = make_text_citation($art_h->{$id});
+      if ($do_indent) {
+	$citation =~ s/((\S|\s){55}\s*\S+)\s+/$1\n            /g;
+      }
+      printf("%9d   %s\n\n", $id, $citation);
+    }
+
+
+    if ($show_abstract) {
+      my $abstract = $art_h->{$id}{'AB'};
+      if (defined $abstract) {
+	if ($write_html) {
+	  print "\n<p>", $abstract, "\n</p>\n";
+	} else {
+	  if ($do_indent) {
+	    $abstract =~ s/(.{55}\s*[^\s]+)\s+/$1\n            /g;
+	    print "            ", $abstract, "\n\n";
+	  } else {
+	    $abstract =~ s/(.{65}\s*[^\s]+)\s+/$1\n/g;
+	    print $abstract, "\n\n";
+	  }
+	}
+      }
+    }
+
+    if ($show_url && !$write_html) {
+      my $url = $art_h->{$id}{'PubMedURL'};
+      if (defined $url) {
+	print "            ", $url, "\n\n";
+      }
+    }
+  }
+}

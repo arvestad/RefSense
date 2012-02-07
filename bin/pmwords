@@ -1,0 +1,309 @@
+#! /usr/bin/perl -w
+
+use lib "/home/compbio/arve/src/biblio/lib";
+use PubMed;
+use Words;
+use Globals;
+
+my $maxNWords = 20;
+my $what_to_do = 'wc';
+
+my $usage = "Usage: pmwords [<options>] <id files>+
+
+The ID files follow the standard $Biblio format with PMIDs in the left margin.
+PMIDs can be classified as positive or negative examples by preceeding PMID
+with a '+' or a '-'.
+
+Options:
+   -u         This text.
+   -n <int>   The maximum number of words to report. Default: $maxNWords.
+              Only the most common/important words are reported.
+              Set to 0 if you want all words.
+
+   -wc        Simple word count, both positive, negative and other examples (default).
+
+   -si        Word significance, as defined by Pr(positive word)/Pr(neg or common word)
+              Background frequencies are computed from all given abstracts: positive,
+              negative, and unmarked.
+
+   -st        Use word stemming using Porter's algorithm.
+
+   -idf       Compute Inverse Document Frequency.
+
+   -mh        Use words from Mesh headings.
+   -ti        Use title words.
+   -au        Use author names.
+";
+
+
+if (@ARGV == 0) {
+  print $usage, "\n";
+  exit(0);
+}
+
+my @filenames=();
+
+my $medline_parts = {'AB'=>undef};
+
+### Subroutines ###
+
+# In:  + Ref to hash containing PMID:s
+#      + Ref to hash containing the parts of the Medline abstract
+#        to count. One or more of AB, AU, TI, MH.
+#
+# Out: Nested hashes, PMID -> Word -> integer
+#
+sub pmid2wordcount {
+  my ($href, $what) = @_;
+  my @pmids = keys %$href;
+  my %pmid2wc = ();
+
+  my $arts = pm_fetch_pubmed(\@pmids);
+  foreach my $pmid (keys %$arts) {
+    my %wh = ();
+    article_update_word_count($arts->{$pmid}, \%wc, $what);
+    $pmid2wc{$pmid} = \%wc;
+  }
+  return \%pmid2wc;
+}
+
+
+# In:  Ref to nested hash, PMID -> Word -> integer
+# Out: Ref to hash Word -> integer
+#
+# This function "flattens" the datastructures produced by pmid2wordcount.
+#
+sub flatten_word_hash {
+  my ($h) = @_;
+
+  my $w2c = ();
+  foreach my $pmid (keys %$h) {
+    $w2c = wc_union($h->{$pmid}, $w2c);
+  }
+
+  return $w2c;
+}
+
+
+# In:  Ref to nested hash, PMID -> Word -> int
+# Out: Ref to hash Word -> PMID
+#
+sub invert_word_hash {
+  my ($h) = @_;
+
+  my %w2pmid = ();
+
+  foreach my $pmid (keys %$h) {
+    my %used_words = ();
+    my $pmid_h = $h->{$pmid};
+    foreach my $word (keys %$pmid_h) {
+      if (!exists $used_words{$word}) {
+	push @{$w2pmid{$word}}, $pmid;
+      }
+    }
+  }
+
+  return \%w2pmid;
+}
+
+ # 
+sub wc_union {
+  my ($h1, $h2) = @_;
+
+  my %new_h = ();
+  foreach my $word (keys %$h1) {
+    if (exists $h2->{$word}) {
+      $new_h{$word} = $h1->{$word} + $h2->{$word};
+    } else {
+      $new_h{$word} = $h1->{$word};
+    }
+  }
+
+  foreach my $word (keys %$h2) {
+    $new_h{$word} = $h2->{$word};
+  }
+
+  return \%new_h;
+}
+
+
+
+sub output_word_count {
+  my ($pos_words, $neg_words, $bg_words) = @_;
+
+  my $words = wc_union($pos_words, $neg_words);
+  $words = wc_union($words, $bg_words);
+
+  my @wa = sort {$words->{$b} <=> $words->{$a}} keys %$words;
+  if (scalar(@wa) > $maxNWords && $maxNWords != 0) {
+    @wa = @wa[0 .. $maxNWords-1];
+  }
+
+  foreach my $word (@wa) {
+    print $word, "\t", $words->{$word}, "\n";
+  }
+}
+
+
+sub output_significant_words {
+  my ($pos_words, $neg_words, $bg_words) = @_;
+
+  my $pos_occur = invert_word_hash($pos_words);
+  my $neg_occur = invert_word_hash($neg_words);
+  my $bg_occur  = invert_word_hash($bg_words);
+
+  my $n_pos_pmid = scalar(keys(%$pos_words));
+  my $n_neg_pmid = scalar(keys(%$neg_words));
+  my $n_bg_pmid = scalar(keys(%$bg_words));
+
+  my %significance = ();
+  foreach my $word (keys %$pos_occur) {
+    my @a = $pos_occur->{$word};
+    my $pos_freq = scalar(@a) / $n_pos_pmid;
+
+    my $neg_count = 0;
+    if (exists $neg_occur->{$word}) {
+      $neg_count = scalar(@$neg_occur->{$word});
+    }
+    if (exists $bg_occur->{$word}) {
+      $neg_count += scalar(@$bg_occur{$word});
+    }
+
+    my $neg_freq = (1 + $neg_count) / (1 + $n_neg_pmid);
+
+    $significance{$word} = $pos_freq / $neg_freq;
+  }
+
+  #### What about background frequencies?!?!
+
+  my @wa = sort {$significance{$a} <=> $significance{$b}} keys %significance;
+  if (scalar(@wa) > $maxNWords && $maxNWords != 0) {
+    @wa = @wa[0 .. $maxNWords - 1];
+  }
+
+  foreach my $word (@wa) {
+    print $word, "\t", $significance{$word}, "\n";
+  }
+}
+
+
+
+### Main ###
+
+while (my $opt = shift @ARGV) {
+  if ($opt eq '-u' || $opt eq '-h' || $opt eq '--help') {
+    print $usage;
+    exit 0;
+  }
+
+  if ($opt =~ /^-\w+$/) {
+    if ($opt eq '-n') {
+      if (@ARGV) {
+	my $int = shift @ARGV;
+	if ($int =~ /\d+/) {
+	  $maxNWords = $int;
+	} else {
+	  print STDERR "Argument to option '-n' must be an integer. Found '$int' instead.";
+	  print STDERR $usage;
+	  exit 1;
+	}
+      } else {
+	print STDERR "An integer is expected as an argument to option '-n'.";
+	print STDERR $usage;
+	exit 2;
+      }
+    } elsif ($opt eq '-mh') {
+      $medline_parts->{'MH'} = undef;
+    } elsif ($opt eq '-ti') {
+      $medline_parts->{'TI'} = undef;
+    } elsif ($opt eq '-au') {
+      $medline_parts->{'AU'} = undef;
+    } elsif ($opt eq '-wc') {
+      $what_to_do = 'wc';
+    } elsif ($opt eq '-si') {
+      $what_to_do = 'si';
+    } elsif ($opt eq '-st') {
+      $UseStemming = 1;
+    } elsif ($opt eq '-idf') {
+      $what_to_do = 'idf';
+    } else {
+      print STDERR "Unknown option: $opt\n";
+      print STDERR $usage;
+      exit 3;
+    }
+  } else {			# Found a file name
+    push @files, $opt;
+  }
+}
+
+if (@files == 0) {
+  print STDERR "No filenames on command line!";
+  print STDERR $usage;
+  exit 4;
+}
+
+# Collect PMID:s in two hash tables
+my %positives=();
+my %negatives=();
+my %background=();		# For unclassified papers
+
+# Read all PMID:s from input files
+foreach my $f (@files) {
+  open(F, "<$f") 
+    || die "Could not open file '$f'!";
+
+  while (<F>) {
+    if (/^(\s*([+-]?)\s*)(\d+)/) {
+      if (length($1) < 5) {	# Make sure that it is a PMID matched and not a stray integer!
+	if ($2 eq '+') {
+	  $positives{$3} = undef;
+	} elsif ($2 eq '-') {
+	  $negatives{$3} = undef;
+	} else {
+	  $background{$3} = undef;
+	}
+      }
+    }
+  }
+  close(F);
+}
+
+my $must_exit = 0;
+my $n_pos = scalar(keys %positives);
+my $n_bg = scalar(keys %negatives) + scalar(keys(%background));
+if ($n_pos == 0) {
+  print STDERR "Error: No positive examples!\n";
+  $must_exit = 1;
+}
+if ($n_bg == 0) {
+  print STDERR "Error: No negative or background examples!\n";
+  $must_exit = 1;
+}
+if ($must_exit) {
+  exit 1;
+}
+if ($n_pos < 5) {
+  print STDERR "Warning: Only $n_pos positive examples.\n";
+}
+if ($n_bg < 5) {
+  print STDERR "Warning: Only $n_bg examples for background frequencies.\n";
+}
+
+
+my $pos_words = pmid2wordcount(\%positives, $medline_parts);
+my $neg_words = pmid2wordcount(\%negatives, $medline_parts);
+my $bg_words = pmid2wordcount(\%background, $medline_parts);
+
+if ($what_to_do eq 'wc') {
+  output_word_count(flatten_word_hash($pos_words),
+		    flatten_word_hash($neg_words),
+		    flatten_word_hash($bg_words));
+} elsif ($what_to_do eq 'si') {
+  output_significant_words($pos_words,
+			   $neg_words,
+			   $bg_words);
+} elsif ($what_to_do eq 'idf') {
+  output_idf($pos_words, $neg_words, $bg_words);
+} else {
+  die("Bad programming: Unknown output choice '$what_to_do'\n");
+}

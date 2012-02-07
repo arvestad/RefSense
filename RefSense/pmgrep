@@ -1,0 +1,49 @@
+#! /usr/bin/perl -w
+
+=pod
+
+=head1 NAME
+
+pmgrep - Grepping on RefSense items
+
+=head1 SYNOPSIS
+
+   pmgrep <string> [<file>]
+
+=head1 DESCRIPTION
+
+Reads from STDIN or <file> and output those records that has a substring
+matching <string>.
+
+=head1 SEE ALSO
+
+See also home page at http://www.nada.kth.se/~arve/refsense.
+
+=cut
+
+my $fragment=shift @ARGV;		# The little string to match
+if (length($fragment) == 0) {	# Nothing to match
+  exit(0);
+}
+
+my $entry = '';			# Currently parsed entry with $pmid
+my $have_match = 0;		# Record if the entry has matched or not
+
+while (<>) {
+  if (m/^\s{0,5}[+-]?\d{4,}\s+.*$/) { # New entry
+    if ($have_match) {
+      print $entry;
+      $have_match = 0;		# Restore
+    }
+    $entry = '';
+  }
+
+  $entry .= $_;
+  if (m/$fragment/i) {		# The entry matches! Case insensitive
+    $have_match = 1;
+  }
+
+}
+if ($have_match) {
+  print $entry;
+}

@@ -1,0 +1,49 @@
+#! /bin/bash
+
+usage() {
+    echo `basename $0` ": Use your browser to view an articles. Invokes pmid2text"
+    echo "  with options '-www' or '-b'."
+    echo "Options:"
+    echo "   -b   Call on biblio.cgb.ki.se to view the article entries."
+    echo "   -p   Call on PubMed at ncbi.gov to view articles."
+    echo ""
+    echo "See also home page at http://www.nada.kth.se/~arve/biblio."
+}
+
+
+# Should we use biblio?
+if [ "$1" = "-h" ]; then
+    usage();
+    exit
+elif [ "$1" = "-b" ]; then
+    USE='biblio';
+    shift
+elif [ "$1" = "-p" ]; then
+    USE='pubmed';
+    shift;
+fi
+
+# Check that we have at least one param
+if [ -z $1 ]; then
+  echo "You provided no search terms"
+  usage
+  exit
+fi
+    
+
+if [ -z "$USE" ]; then 
+    URL=`pmid2text -www $*`
+elif [ "$USE" = 'biblio' ]; then
+    URL=`pmid2text -b $*`;
+else 
+    URL=`pmid2text -p $*`;
+fi
+
+
+BROWSER=${BIBLIO_BROWSER:-mozilla}
+case $BROWSER in
+    (mozilla|firefox|netscape) $BROWSER -remote "openURL("$URL")";;
+    (konqueror)                konqueror $URL;;
+    (*)                        htmlview $URL;;
+esac
+

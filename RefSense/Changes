@@ -1,0 +1,156 @@
+Revision history for Perl extension RefSense.
+
+Version 1.1
+
++ 110307: taxonomy now uses XML::Simple to parse IDs. This removes
+	  a sad parsing bug.
+
++ 110307: Added option '-aaa' to pmid2text, meaning "show only
+	  abstract. Thanks Ali Tofigh!
+
++ 090511: Added option '-kp' to pmid2bibtex and changed behaviour
+	  of the program. A trailing period in a title is now
+	  removed unless the '-kp' option has been issued.
+
++ 090429: Added option '-ali' to pmid2bibtex. This generates a 
+          bibtex key like Arvestad-03 based on first author and
+	  year.
+
+
+
+1.0  Mon Jan 24 11:36:24 2005
+	- original version; created by h2xs 1.22 with options
+		-X -n RefSense -v 1.0
+
++ Implemented suggestion by Glenn Tesler: RefSense now handles
+  "collective names", e.g., "ENCODE Project Consortium", properly. It
+  is a hack, but it seems to behave in a decent way.
+
++ pmsearch now accepts two-letter abbreviations in field
+  specifications. For example:
+    pmsearch title=amino+acid author=arvestad
+  is equivalent to
+    pmsearch ti=amino+acid au=arvestad
+
++ New program: taxtree 
+
+  Reads output from 'taxonomy' and deduce a common tree. Some
+  examples:
+    > taxonomy pig cow horse goat sheep|taxtree
+    (((Bos_taurus, (Capra_hircus, Ovis_aries)), Sus_scrofa), 
+    Equus_caballus);
+
+    > taxonomy  lion tiger jaguar  lynx |taxtree
+    ((Panthera_leo, Panthera_onca, Panthera_tigris), Lynx);
+
+    > taxonomy populus arabidopsis oryza medicago wheat barley | taxtree
+    (((Hordeum_vulgare, Triticum_aestivum), Oryza), (Arabidopsis, 
+    (Populus, Medicago)));
+
++ pmid2text, pmid2www
+  Change PubMed view mode when using the -p option ("view at
+  PubMed"). When a single article is requested, the link to PubMed
+  asks for the Abstract mode, but for a list of articles, the Docsum
+  view is used. Compare
+        pmid2www -p 16752207
+  with
+	pmid2www -p 16752207,16680195
+
++ pmid2www
+  Open several article views. With the -p option, a single view at
+  PubMed is opened, but the default is to have one window for each
+  paper. Try for example
+	pmid2www 16752207,16680195
+  which should open two windows. The maximum number of windows is
+  limited to 5 to avoid problems. The user can change that number by
+  setting the environment variable REFSENSE_MAXNUM to a sensible
+  number.
+
++ pmid2www
+  Environment variables: Uses REFSENSE_BROWSER instead of
+  BIBLIO_BROWSER to decide user preference. 
+
++ Several programs
+  Caching of article data can be turned of by setting the environment
+  variable REFSENSE_DONT_CACHE. 
+
+  The default behaviour is to avoid asking NCBI for article data by
+  looking in /tmp. If the article with PMID 123456 has been viewed
+  before (e.g. with pmid2text) then its MEDLINE data has (normally)
+  been written to /tmp/pm123456. If a lot of entries are reviewed by a
+  script, it may not be desirable to have /tmp fill up. The
+  REFSENSE_DONT_CACHE variable simply disables the cache function
+  writing to /tmp. It does not prevent reading of alread cached
+  entries. 
+
+  Sample usage:
+	 > REFSENSE_DONT_CACHE=1 pmid2text < longlist.pmid
+
++ pmid2format
+  New program from Daniel Lundin.
+  Create citations in any format.
+
++ journalcomplete
+  New program to assist pubmed and pmsearch. The program works
+  together with the completion machiner in bash (and possibly other
+  shells) using a file ~/.refsense_journals in the user's home
+  directory. 
+
+  A bash user can add the line 
+      complete -o default -C journalcomplete pubmed pmsearch
+  and then try
+      > cp ~arve/.refsense_journals
+      > pubmed journal=nat
+  and hit the tab key after the "nat" fragment. If everything is set
+  up correctly, bash will suggest the following completions:
+     Nat+Biotechnol         Nat+Protoc             Nat+Struct+Mol+Biol
+     Nat+Cell+Biol          Nat+Rev+Mol+Cell+Biol  Nature
+  These strings are all valid input to pubmed/pmsearch. 
+
+  The format of .refsense_journals is simple. One journal per line,
+  for example
+      Nature Biotech
+  and you can add a synonym for a journal too, such as
+      J Mol Evol, jme
+      Proc Int Conf Intell Syst Mol Biol, ismb
+
+
++ pmid2bibtex
+  Better generation of Bibtex keys. For example, 
+	> pmid2bibtex 16830091
+	@article{BerglundSonnhammer16830091,
+	  author = {Berglund-Sonnhammer, A.C. and ...
+  instead of
+	> pmid2bibtex 16830091
+	@article{Berglund-Sonnhammer16830091, ...
+  (dash removed) and
+	> pmid2bibtex 18214976
+	@article{delaCruz18214976,
+		 author = {de la Cruz, N.B. and ...
+  instead of
+	> pmid2bibtex 18214976
+	@article{de18214976, ... 
+  and
+	> pmid2bibtex 10903013
+	@article{vonHeijne10903013,
+		 author = {von Heijne, M. and ...
+  instead of
+	> pmid2bibtex 10903013
+	@article{von10903013, ...
+  i.e., the whole name and not just the first string in it is used.
+  
+
++ New program: pmid2connotea
+  Given pmids on the command line or from stdin, open a browser
+  with the right link to add the article to your Connotea account.
+  
+
+  Examples:
+	> pubmed primetv | pmid2connotea
+  opens a browser window.
+
+  Some articles don't have proper DOI associated at Medline,
+	> pmid2connotea 12855432
+	PMID 12855432 does not have an associated DOI.
+	Consider using pmid2www instead!
+  but that is no disaster.

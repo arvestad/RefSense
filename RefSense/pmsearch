@@ -1,0 +1,263 @@
+#! /usr/bin/perl -w
+
+=pod
+
+=head1 NAME
+
+pmsearch - Search PubMed from the command line
+
+=head1 SYNOPSIS
+
+    pmsearch [<options>] <search terms>+
+
+=head2 OPTIONS
+
+=over 4
+
+=item B<-u, -h, --help>
+
+Full help text.
+
+=item B<-c>
+
+Return the number of matching items.
+
+=item  B<< -d <int> >>
+
+The maximum number of PMID:s to report. Default: 100.
+
+=item B<< -t <int> >>
+
+The number of days from today to include in search.
+
+=item B<< -w <int> >>
+
+Warn when more than <int> identifiers are returned. Default: 100.
+
+=back
+
+=head1 DESCRIPTION
+
+=head2 Search Terms
+
+A search terms is either a lone word that can match anything in a PubMed entry.
+The complete query is a conjunction of its terms.
+
+You can for example write C<pmsearch eisen yeast> and get back (at this writing) 31
+PubMed identifiers. You may also write these search terms using the PubMed qualifiers
+to specify to what record in an entry a term should match. For example, writing
+C<pmsearch eisen[AU] yeast> specifies that C<eisen> is an author. However, since the
+PubMed way of writing things is hard to remember (for me at least), a second way of
+qualifying terms is implemented. The general syntax in this case is:
+  <qualifier>=<term>
+where <qualifier> is one of
+
+=over
+
+=item * author
+
+=item * abstract
+
+=item * journal
+
+=item * title
+
+=item * year
+
+=back
+
+The previous example is then written as C<pmsearch author=eisen yeast>.
+
+The C<year> qualifier can handle both a single year, as well as a year
+range. The following are all valid expressions:
+
+	pmsearch author=gribskov year=2000-2002
+	pmsearch author=gribskov year=-2000
+	pmsearch author=gribskov year=2002-
+
+The range delimiter is either the pmsearch-specific but natural '-'
+as above, or PubMed's colon operator, i.e., C<year=2000:2002>.
+
+Space within search terms are to be replaced with a '+'. For example,
+to find papers by von Heijne, write C<pmsearch author=von+heijne>.
+
+=head2 Journal titles
+
+The journal titles can be hard to get right. Use either their full
+names (with space-replacement, e.g.C<Molecular+Biology+and+Evolution>)
+or the official abbreviation (C<Mol+Biol+Evol>). See the PubMed WWW
+site for details. In addition to the official abbreviations, pmsearch
+recognizes some additional common acronyms, which is translated to a
+name recognized by PubMed. Currently implemented are:
+
+      Key   Journal
+      psb = Pac Symp Biocomput
+      jmb = J Mol Biol
+     ismb = Proc Int Conf Intell Syst Mol Biol
+      jme = J Mol Evol
+      nar = Nucleic Acids Res
+      mbe = Mol Biol Evol
+     embo = EMBO J
+     pnas = Proc Natl Acad Sci U S A
+   cabios = Comput Appl Biosci
+      jcb = J Comput Biol
+
+See also home page at http://www.nada.kth.se/~arve/refsense.
+
+=cut
+
+use PubMed;
+use Citation;
+
+use Pod::Usage;
+use Pod::Text;
+
+my $DefaultDispMax = 100;
+my $WarningLimit = 100;
+my $numdays = 0;
+my $RefCount = 0;
+my $method = 'uilist';
+
+
+my %tag_translation= ('year' => 'DP',
+		      'title' => 'TI',
+		      'author' => 'AU',
+		      'journal' => 'TA',
+		      'abstract' => 'TIAB',
+		      'ye' => 'DP',
+		      'ti' => 'TI',
+		      'au' => 'AU',
+		      'jo' => 'TA',
+		      'ab' => 'TIAB',
+);
+
+my %journals = ('cabios' => 'Comput+Appl+Biosci',
+'embo' => 'EMBO+J',
+'jcb' => 'J+Comput+Biol',
+'jmb' => 'J+Mol+Biol',
+'jme' => 'J+Mol+Evol',
+'mbe' => 'Mol+Biol+Evol',
+'nar' => 'Nucleic+Acids+Res',
+'psb' => 'Pac+Symp+Biocomput',
+'ismb' => 'Proc+Int+Conf+Intell+Syst+Mol+Biol',
+'pnas' => 'Proc+Natl+Acad+Sci+U+S+A',
+);
+				
+# my $journal_list_string = '';
+# while  (my ($k, $n) = (each %journals)) {
+#   $n =~ s/\+/\ /g;
+#   $journal_list_string .= sprintf("%10s = %s\n", $k, $n);
+# }
+
+
+
+if (@ARGV == 0) {
+  pod2usage();
+}
+
+my @searchterms=();
+
+while (my $opt = shift @ARGV) {
+  if ($opt eq '-u' || $opt eq '-h' || $opt eq '--help') {
+    pod2usage({-verbose=>2});
+    exit 0;
+  }
+
+  if ($opt eq '-c') {
+    $method = 'count';
+  } elsif ($opt eq '-d') {
+    if (@ARGV) {
+      my $int = shift @ARGV;
+      if ($int =~ /\d+/) {
+	$DefaultDispMax = $int;
+      } else {
+	pod2usage("Argument to option '-d' must be an integer. Found '$int' instead.\n");
+      }
+    } else {
+      pod2usage("An integer is expected as an argument to option '-d'.\n");
+    }
+  } elsif ($opt eq '-t') {
+    if (@ARGV) {
+      my $int = shift @ARGV;
+      if ($int =~ /\d+/) {
+	$numdays = $int;
+      } else {
+	pod2usage("Argument to option '-t' must be an integer. Found '$int' instead.\n");
+      }
+    } else {
+      pod2usage("An integer is expected as an argument to option '-t'.\n");
+    }
+  }  elsif ($opt eq '-w') {
+    if (@ARGV) {
+      my $int = shift @ARGV;
+      if ($int =~ /\d+/) {
+	$WarningLimit = $int;
+      } else {
+	pod2usage("Argument to option '-w' must be an integer. Found '$int' instead.\n");
+      }
+    } else {
+      pod2usage("An integer is expected as an argument to option '-w'.\n");
+    }
+  } else {
+    if ($opt =~ m/^(\S+)=(.+)$/) {
+      my $tag = $1;
+      my $arg = $2;
+      if (exists $tag_translation{$tag}) {
+	if ($tag eq 'year') {	# Take care of ranges if they are used
+	  my $maxdate=8166;	# PubMed does not like years after 8166!! Why?
+	  my $mindate=1900;
+	  if ($arg =~ m/^[:\-](\d\d\d\d)$/) { # Before this year
+	    $maxdate = $1;
+	    $arg = "$mindate:$maxdate";
+	  } elsif ($arg =~ m/^(\d\d\d\d)[:\-]/) { # After this year
+	    $mindate = $1;
+	    $arg = "$mindate:$maxdate";
+	  } elsif ($arg =~ m/^(\d\d\d\d)[:\-](\d\d\d\d)/) { # Inbetween these years
+	    $mindate = $1;
+	    $maxdate = $2;
+	    $arg = "$mindate:$maxdate";
+	  }
+	} elsif ($tag eq 'journal') { # Special treatment for journal abbrevs
+	  if (exists $journals{$arg}) {
+	    $arg = $journals{$arg};
+	    $arg =~ s/\ /+/g;
+	  }
+	}
+	$tag = $tag_translation{$tag};
+      }
+      push @searchterms, "$arg\[$tag\]";
+    } else {
+      push @searchterms, $opt;
+    }
+  }
+}
+
+my $term = join('+AND+', @searchterms);
+my $def_query = {'term' => $term,
+		 'retmax' => $DefaultDispMax,
+		 'rettype' => $method};
+if ($numdays > 0) {
+  $def_query->{'reldate'} = $numdays;
+}
+
+
+my $res = pm_extract_pmids(pm_query($def_query));
+if (! defined $res) {
+  print STDERR "An error occured. Please correct your search terms or try again later.\n";
+  exit 1;
+}
+
+my $count = $res->[0];
+my $pmids = $res->[1];
+
+if ($method eq 'count') {
+  print $count, "\n";
+} else {
+  my $nitems = scalar(@$pmids);
+  if ($nitems > $WarningLimit) {
+    print STDERR "Warning: At least $nitems items found in PubMed search.\n";
+  }
+  foreach my $id (@$pmids) {
+    print $id, "\n";
+  }
+}

@@ -1,0 +1,79 @@
+#! /usr/bin/perl -w
+
+#use lib "$ENV{HOME}/lib/biblio";
+use PubMed;
+use Globals;
+
+my $operate_quietly = 1;
+my $from_db = 'pubmed';
+my $to_db = undef;
+my $count_only = 0;
+
+my $usage = "Usage: pmid2linked [<options>] <db> [<pubmed identifier>+]
+
+Options: 
+   -u       This text.
+   -from    The DB to link from, e.g. 'nucleotide', 'protein', et.c.
+   -c       Output the number of linked items only.
+
+Example:
+  >pmid2linked -c nucleotide 12649486
+  182
+
+  >pmid2linked -from nucleotide protein 18250303 18250307
+  18250308
+
+";
+
+
+my @pmids = ();
+
+while (my $opt = shift @ARGV) {
+  if ($opt eq '-u') {
+    print $usage;
+    exit 0;
+  } elsif ($opt =~ m/^-c$/) {
+    $count_only = 1;
+  } elsif ($opt =~ m/^-from/) {
+    if (scalar(@ARGV) > 1) {
+      if (pm_valid_dbname($ARGV[0]))  {
+	$from_db = shift @ARGV;
+      } else {
+	print STDERR "Not a PubMed database: ", $ARGV[0], "\n";
+	exit 1;
+      }
+    } 
+  } elsif ($opt =~ m/\d+/) {
+    push @pmids, $opt;
+  } elsif ($opt =~ m/\w+/ && pm_valid_dbname($opt)) {
+    $to_db = $opt;
+  } elsif (!$operate_quietly) {
+    print STDERR "Cannot use command line argument: '$opt'\n";
+    exit 1;
+  }
+}
+
+if (!defined $to_db) {
+  print STDERR "Did not see a valid PubMed DB to link to in command line arguments\n";
+  exit 2;
+}
+
+if (scalar(@pmids) == 0) {
+  while (<>) {
+    if (/^(\s*[+-]?\s*)(\d+)/) {
+      if (length($1) < 5) {
+	push @pmids, $2;
+      }
+    }
+  }
+}
+
+my $res = pm_fetch_linked($from_db, $to_db, \@pmids);
+if ($count_only) {
+  print $res->[0], "\n";
+} else {
+  my $refs = $res->[1];
+  foreach my $id (keys %$refs) {
+    print $id, "\n";
+  }
+}

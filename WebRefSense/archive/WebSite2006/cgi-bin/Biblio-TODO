@@ -1,0 +1,101 @@
+BibMed: Another frontend to PubMed
+----------------------------------
+
+Planned features:
+
+2. Can load an HTML page with refs already gathered at PubMed.
+
+4. More formats easily added. Citation Manager? Word? HTML!
+
+5. Some control over what is saved: You can have the abstract in the
+   'annote' field if you please.
+
+6. A complete postscript version of a bibliography can be downloaded
+   for pretty printing. You decide the format.
+
+9b User can choose search engine: Google, AltaVista, MetaSearch, et.c.
+
+12. Most cited publications? This could be a cute tool for pruning the
+    cache. A file with tuples [PMID #saves last-used-date] is
+    kept. Whenever we look at the, say, Top 10, we also remove the old
+    and rarely used PMID:s.
+
+13. Upload BibTeX files to BibMed or Trawler for re-searching.
+
+15. In journals participating in PubMedCentral, such as PNAS, you can
+    go and find their references! Maybe too much work...
+
+16. Give a help text for how to put a bibmed search box on your
+    homepage. 
+
+17. Updating the date on a cache file in order to make it possible to
+    remove old and rarely used entries.
+
+18. Try linking into the homepage database.
+    (http://hpsearch.uni-trier.de/) 
+
+19. Add LANL preprint archive (xxx.lanl.gov). See HPSearch for how to do
+    that. 
+
+
+------------------------
+Implemented features:
+
+1. Simple searching for references. Textboxes for title, author,
+   et.c. instead of the complicated PubMed system. Less powerful, but
+   more intuitive.
+
+3. Citations can be gathered up into a batch which is then presented
+   in BibTeX format. It is also possible to immediately have the
+   citation downloaded in BibTeX.
+
+4,somewhat. Now outputting HTML and text ref lists in addition to
+   bibtex. 
+
+7. Fast linking into Trawler! Take your batch of citations and see
+   what is related to them. 
+
+8. Trawler-links into BibMed. Take your batch of citations from
+   Trawler and print/save/manage them as you please.
+
+9a A google search field? Quick google-searches based on author and/or
+   title! 
+
+10. Can I hook into CiteSeer? A link should at least be present.
+
+11. To avoid frequent downloading of info from PubMed, a cache could
+    be implemented. The XML for an article/whatever is saved in a file
+    with same PMID. 
+
+14. Convenient re-search tools. Click on author(s) to get more papers.
+
+20. Offer a tool (URL) for online bibliographies. This means a way of
+    constructing a URL query listing the relevant articles (what do to
+    with articles not in PubMed?) and anchors to link right into the
+    resulting document.
+
+    URL http://babbage.cgb.ki.se/cgi-bin/biblio?pmid=x,y,z
+
+
+
+
+
+------------------------
+
+Implementation:
+
+Use the CGI module at CPAN. Remember my Trawler modules.
+
+PMID:s are always shuffled around during a session. 
+
+A search parameter is used to find new candidates for the citation
+batch.
+
+For the article cache: Consider removing old articles from the cache,
+perhaps once a day, *after* having served a page to the user. Also,
+remember that a locking mechanism is probably needed for this system. 
+
+For re-searching: Clicking on a search icon by an article brings you
+into a search construction page. There, you decide what parts,
+i.e. author names, title words, et.c., you want in your search, and
+where to send it. 
