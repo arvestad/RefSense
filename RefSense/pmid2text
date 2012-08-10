@@ -104,30 +104,6 @@ my $use_biblio    = 0;
 my $use_pubmed    = 0;
 my $operate_quietly = 0;
 
-# my $usage = "Usage: pmid2text [<options>] [<pubmed identifier>+]
-
-# Options: 
-#    -u, -h, --help
-#             This text.
-#    -i       No indentation of citations.
-#    -s       Simple, no PMID and indentation.
-#    -y       Sort by publication year.
-#    -a       Show abstract.
-#    -w       Show an URL for retrieving article via PubMed.
-#    -www     Show only the URL and nothing more.
-#    -rs       Show a sole link to RefSense.
-#    -p       Show a link to abstracts at PubMed.
-#    -n <int> Max number of authors without using \"et al\". Set to
-#             zero to show all authors.
-#    -html    Output as HTML for inclusion on a web page.
-#    -q       Quiet. No extraneous output.
-
-# If no PMID is given on the command line, STDIN is read until EOF
-# and parsed for PMID:s. The expected format is a PMID first on each
-# line, possibly followed by a space and any string.
-
-# See also home page at http://www.nada.kth.se/~arve/refsense.
-# ";
 
 ###
 
