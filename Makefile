@@ -1,7 +1,7 @@
-PUBLIC_APPS = pmid2bibtex pmid2text pmid2seq pmid2related pmsearch pubmed pmcomplete pmid2www taxonomy lca taxtree scholar journalcomplete pmid2format
+PUBLIC_APPS = pmid2bibtex pmid2text pmid2seq pmid2related pmsearch pubmed pmcomplete pmid2www taxonomy lca taxtree scholar journalcomplete pmid2format pmid2id
 
 NAME = refsense
-VERSION = 1.1
+VERSION = 1.2
 DISTRDIR = ${NAME}_${VERSION}
 srcdir = RefSense
 
