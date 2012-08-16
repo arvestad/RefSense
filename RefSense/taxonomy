@@ -31,6 +31,7 @@ use Pod::Usage;
 use Pod::Text;
 
 use XML::Simple;
+use Data::Dumper;
 
 if (@ARGV == 0) {
   pod2usage();
@@ -53,19 +54,32 @@ my $def_query = {'term' => $term,
 		 'rettype' => 'xml'};
 
 
-
-
 my $res = pm_query($def_query);
 if (! defined $res) {
   print STDERR "An error occured. Please correct your search terms or try again later.\n";
   exit 1;
 }
 
+
 my $data = XMLin($res, GroupTags => {IdList => Id});
-#print STDERR Dumper($data);
+
 if (scalar($data->{IdList}) == 0) {
   print STDERR "No matching species or lineages.\n";
   exit 2;
+}
+
+if (exists $data->{ErrorList}) {
+#if (scalar($data->{ErrorList}) > 0) {
+#  print STDERR Dumper($data->{ErrorList}{PhraseNotFound});
+  my $phraselist = $data->{ErrorList}{PhraseNotFound};
+  print STDERR "Error: The following items were not recognized.\n";
+  if (ref($phraselist) eq 'ARRAY') {
+    for my $i (@$phraselist) {
+      print STDERR "\t$i\n";
+    }
+  } else {
+    print STDERR "\t$phraselist\n";
+  }
 }
 
 my $fetch_params = {'db' => 'taxonomy',
@@ -73,6 +87,7 @@ my $fetch_params = {'db' => 'taxonomy',
 		    'report' => 'xml',
 		    'id' => $data->{IdList}};
 $res = pm_fetch($fetch_params);
+#print STDERR Dumper($res), "\n";
 
 my $ignore_detailed_lineage_nodes = 0;
 if (defined $$res && length($$res) > 0) {
