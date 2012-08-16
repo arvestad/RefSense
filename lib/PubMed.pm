@@ -14,7 +14,7 @@ use BibCache;
 $VERSION = 1.0;
 
 # For tool recognition at EUtils.
-$TOOLSTRING = 'pmbt';
+$TOOLSTRING = 'RefSense'; # Old tool string: 'pmbt';
 
 ### URL:s ################################################################################
 # Shared URL prefix:
@@ -164,6 +164,16 @@ sub pm_fetch {
     my $arg_str = join('&', @arg_v);
     # Now divide the id array into slices. Query PubMed with one slice at the time.
     my $ids = $href->{'id'};
+
+    # Stupid workaround the fact that I don't get an array when
+    # there is only one element.
+    if (defined $ids) {
+      if (scalar(@$ids) == 0) {
+	my @a = ( $ids); 
+	$ids = \@a;
+      }
+    }
+
     my @id_slice;
     my $size = scalar(@$ids);
     my $lastidx = $size - 1;
@@ -295,15 +305,8 @@ sub parse_article_medline {
 	  $label = $1;
 	  $current_label = $label;
 	  $value = $2;
-	  #print STDERR "$label: $value\n";
 	  if (exists $is_multi_line->{$label}) {
 	    push @{$tmp_h{$label}}, $value;
-# 	    if (exists $tmp_h{$label}) {
-# 	      my $av = $tmp_h{$label};
-# 	      push @$av, $value;
-# 	    } else {
-# 	      $tmp_h{$label} = [$value];
-# 	    }
 	  } else {
 	    $tmp_h{$label} = $value;
 	  }
@@ -368,7 +371,7 @@ sub pm_fetch_linked {
 # In:  An XML string
 # Out: A pair containing the number of hits in PubMed (which
 #      of course may be larger than the number of hits retrieved!)
-#      and a ref to a has of id:s mapped to relatedness score.
+#      and a ref to a hash of id:s mapped to relatedness score.
 #      If the input string does not contain an ID list, but contains
 #      the substring "ERROR", undef is returned.
 #

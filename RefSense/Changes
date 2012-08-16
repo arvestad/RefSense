@@ -1,5 +1,15 @@
 Revision history for Perl extension RefSense.
 
+Version 1.2.1
++ 120815: Cured taxonomy from failing on single-taxa queries. Fixed
+	  Removing bug in PubMed.pm.
+
+Version 1.2
+
++ 120813: Added new program pmid2id for returning, in particular, DOI's
+	  from PubMed ID.
+
+
 Version 1.1
 
 + 110307: taxonomy now uses XML::Simple to parse IDs. This removes
