@@ -88,7 +88,7 @@ sub pm_query {
   $url .= join('&', @url_parts);
 #  print STDERR "URL: $url\n";
   my $res = easyget $url;
-  return pm_extract_pmids($res);
+  return $res;
 }
 
 
@@ -168,11 +168,17 @@ sub pm_fetch {
     # Stupid workaround the fact that I don't get an array when
     # there is only one element.
     if (defined $ids) {
-      if (scalar(@$ids) == 0) {
+    # It seems I get a hash table back when there are no hits.
+      if (ref($ids) eq 'HASH') {
+	my @a = ();
+	$ids = \@a;
+      }
+      if (ref($ids) ne 'ARRAY') {
 	my @a = ( $ids); 
 	$ids = \@a;
       }
     }
+
 
     my @id_slice;
     my $size = scalar(@$ids);

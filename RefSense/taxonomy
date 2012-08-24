@@ -23,7 +23,7 @@ Scientific of common name.
 =cut
 
 
-#use Data::Dumper;
+use Data::Dumper;
 use PubMed;
 use Citation;
 
@@ -31,13 +31,50 @@ use Pod::Usage;
 use Pod::Text;
 
 use XML::Simple;
-use Data::Dumper;
 
 if (@ARGV == 0) {
   pod2usage();
 }
 
+
+### Support for taxcomplete ####################
+my %known_taxa = ();
+my %new_taxa = ();
+my $taxafile = "$ENV{HOME}/.refsense_taxonomy";
+sub load_known_taxa {
+  open(F, "<$taxafile")
+    || exit(0);
+
+  while (<F>) {
+    chomp;
+    $known_taxa{$_} = undef;
+  }
+  close(F);
+}
+
+sub register_taxa {
+  my $taxa = shift;
+  if ($taxa =~ m/\ /) {
+    $taxa = "\"$taxa\"";
+  }
+#  print STDERR "==> $taxa\n";
+  if (!exists $known_taxa{$taxa}) {
+    $new_taxa{$taxa} = undef;
+  }
+}
+
+sub save_new_taxa {
+  open(A, ">>$taxafile") || exit(0);
+  foreach $t (keys %new_taxa) {
+    print A $t, "\n";
+  }
+  close(A);
+}
+
+
+### Main starts here ############################
 my @searchterms=();
+load_known_taxa();
 
 while (my $opt = shift @ARGV) {
   if ($opt eq '-u' || $opt eq '-h' || $opt eq '--help') {
@@ -55,6 +92,7 @@ my $def_query = {'term' => $term,
 
 
 my $res = pm_query($def_query);
+#print STDERR "Results:\n", Dumper($res), "\n";
 if (! defined $res) {
   print STDERR "An error occured. Please correct your search terms or try again later.\n";
   exit 1;
@@ -77,6 +115,7 @@ if (exists $data->{ErrorList}) {
     for my $i (@$phraselist) {
       print STDERR "\t$i\n";
     }
+    print STDERR "\n";
   } else {
     print STDERR "\t$phraselist\n";
   }
@@ -98,9 +137,11 @@ if (defined $$res && length($$res) > 0) {
 	next;
       } else {
 	print "Scientific Name: $1\n";
+	register_taxa($1);
       }
     } elsif ($s =~ m/CommonName>(.+)<\/\S*CommonName>/) { # GenbankCommonName or CommonName
       print "    Common Name: $1\n";
+      register_taxa($1);
     } elsif ($s =~ m/<Rank>(.+)<\/Rank>/) {
       if ($ignore_detailed_lineage_nodes) {
 	next;
@@ -126,4 +167,6 @@ if (defined $$res && length($$res) > 0) {
     }
   }
 }
+save_new_taxa();
 exit 0;
+
