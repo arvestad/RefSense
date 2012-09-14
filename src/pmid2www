@@ -1,0 +1,82 @@
+#! /bin/bash
+
+BROWSER=${BIBLIO_BROWSER:-htmlview}
+BROWSER=${REFSENSE_BROWSER:-$BROWSER}
+MAXNUM=${REFSENSE_MAXNUM:=5}
+
+usage() {
+    echo `basename $0` ": Use your browser to view an articles. Invokes pmid2text"
+    echo "  with options '-www' or '-b'."
+    echo ""
+    echo "OPTIONS"
+    echo "      -b   Call on biblio.cgb.ki.se to view the article entries."
+    echo "      -p   Call on PubMed at ncbi.gov to view articles."
+    echo ""
+    echo "ENVIRONMENT VARIABLES"
+    echo "      REFSENSE_BROWSER"
+    echo "           Lets you specify you browser preference. Must"
+    echo "           be one of mozilla, firefox, netscape, and konqueror at this point."
+    echo "           By default, the script 'htmlview' is called."
+    echo "           Currently: $BROWSER"
+    echo ""
+    echo "      REFSENSE_MAXNUM"
+    echo "           The max number of windows opened by $0. Currently: $MAXNUM "
+    echo ""
+    echo "      BIBLIO_BROWSER"
+    echo "           Deprecated for REFSENSE_BROWSER"
+    echo ""
+    echo "See also home page at http://www.csc.kth.se/~arve/code/refsense."
+}
+
+
+# Open one or several links from a list.
+function openwebsite {
+    i=0
+    for url in $*; do
+	i=$(($i+1));
+	if test $i -gt $MAXNUM; then
+	    echo Restricting to $MAXNUM articles!
+	    return
+	fi
+	case $BROWSER in
+	    (mozilla|firefox|netscape) $BROWSER -remote "openURL("$url")";;
+	    (konqueror)                konqueror $url;;
+	    (*)                        htmlview $url;;
+	esac
+    done
+}
+
+
+
+
+# Should we use biblio?
+if [ "$1" = "-h" ]; then
+    usage;
+    exit
+elif [ "$1" = "-b" ]; then
+    USE='biblio';
+    shift
+elif [ "$1" = "-p" ]; then
+    USE='pubmed';
+    shift;
+fi
+
+# Check that we have at least one param
+if [ -z $1 ]; then
+  echo "You provided no search terms"
+  usage
+  exit
+fi
+    
+
+if [ -z "$USE" ]; then 
+    URL=`pmid2text -www $*`
+elif [ "$USE" = 'biblio' ]; then
+    URL=`pmid2text -b $*`;
+else 
+    URL=`pmid2text -p $*`;
+fi
+
+openwebsite $URL
+
+

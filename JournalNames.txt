@@ -1,0 +1,71 @@
+BMC Biochem
+BMC Bioinformatics
+BMC Biol
+BMC Cell Biol
+BMC Evol Biol
+BMC Genomics
+BMC Plant Biol
+Biochemistry
+Bioinformatics
+Brief Bioinform
+Chromosoma
+Comput Appl Biosci, cabios
+Curr Biol
+Curr Opin Struct Biol
+Curr Protoc Cell Biol
+Cytogenet Cell Genet
+Cytogenet Genome Res
+EMBO J
+EMBO Rep
+Eur J Biochem
+FEBS J
+FEBS Lett
+Gene
+Genetics
+Genome Biol
+Genome Res
+Genomics
+Heredity
+Hum Genet
+Hum Mutat
+Insect Mol Biol
+J Biol Chem
+J Cell Biol
+J Comput Biol, jcb
+J Forensic Sci
+J Mol Biol, jmb
+J Mol Evol, jme
+J Mol Graph Model
+JAMA
+Life Sci
+Methods Cell Biol
+Methods Enzymol
+Mol Biol Evol, mbe
+Mol Membr Biol
+Mol Pharmacol
+Mol Phylogenet Evol
+Nat Biotechnol
+Nat Cell Biol
+Nat Protoc
+Nat Rev Mol Cell Biol
+Nat Struct Mol Biol
+Nature
+Nucleic Acids Res, nar
+Pac Symp Biocomput, psb
+PLoS Biol
+PLoS Comput Biol
+Plant Cell
+Plant Cell Physiol
+Plant Physiol
+Planta
+Proc Int Conf Intell Syst Mol Biol, ismb
+Proc Natl Acad Sci U S A, pnas
+Protein Eng Des Sel
+Protein Sci
+Proteins
+Regul Pept
+Res Microbiol
+Science
+Syst Biol
+Trends Biochem Sci
+Trends Genet

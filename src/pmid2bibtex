@@ -1,0 +1,122 @@
+#! /usr/bin/perl -w
+
+=pod
+
+=head1 NAME
+
+pmid2bibtex - Return BibTeX entries from PubMed identifiers
+
+=head1 SYNOPSIS
+
+    pmid2bibtex [<option>] [<pubmed identifier>+]
+
+=head1 DESCRIPTION
+
+If no PMID is given on the command line, STDIN is read until EOF
+and parsed for PMID:s. The expected format is a PMID first on each
+line, possibly followed by a space and any string.
+
+=head2 OPTIONS
+
+=over 4
+
+=item B<-u, -h, --help>
+
+This text.
+
+=item B<-y>
+
+Sort by year.
+
+=item B<-ay>
+
+BibTeX keys are composed as <1st author><year>, instead of
+<1st author><PMID>. Keys are no longer guaranteed to be unique.
+
+=item B<-ali>
+
+BibTeX keys are composed as <1st author>-<ye>, i.e., first 
+author's last name, followed by a dash and last digits of publication
+year. Keys are not guaranteed to be unique.
+
+=item B<-kp>
+
+PubMed have trailing periods in most titles, but not all. To reduce
+confusion in certain BiBTeX styles, these periods are removed by this
+program. Using this option, you can choose to always keep the period.
+Question and exclamation marks are always kept.
+
+=item B<-w>
+
+Include PubMed's URL reference in the record.
+
+=back
+
+=head1 SEE ALSO
+
+See also home page at http://www.nada.kth.se/~arve/refsense.
+
+=cut
+
+
+#use lib "$ENV{HOME}/lib/biblio";
+use PubMed;
+use Citation;
+use Globals;
+
+use Pod::Usage;
+
+# Option flags:
+my $show_abstract = 0;
+my $sort_by_year = 0;
+
+
+my @pmids = ();
+
+while (my $opt = shift @ARGV) {
+  if ($opt eq '-u' || $opt eq '-h' || $opt eq '--help') {
+    pod2usage(-exit_status => 0,
+	      -verbose => 2,
+	     );
+  }
+
+  if ($opt eq '-y') {
+    $sort_by_year = 1;
+  } elsif ($opt eq '-ay') {
+    $BibTeXKeysAsAuthorYear = 1;
+  } elsif ($opt eq '-ali') {
+    $BibTeXKeysAsAuthorYear = 2;
+  } elsif ($opt eq '-kp') {
+    $RemoveTitlePeriod = 0;
+  } elsif ($opt eq '-w') {
+    $IncludeURLInBibTeX = 1;
+  } elsif ($opt =~ m/\d+/) {
+    push @pmids, $opt;
+  } else {
+    pod2usage(-msg => "Cannot use command line argument: '$opt'\n",
+	      -exit_status => 1
+	     );
+  }
+}
+
+if (scalar(@pmids) == 0) {
+  while (<>) {
+    if (/^(\s*[+-]?\s*)(\d+)/) {
+      if (length($1) < 5) {
+	push @pmids, $2;
+      }
+    }
+  }
+}
+
+if (scalar(@pmids) == 0) {
+  pod2usage(-msg => "No PubMed identifiers.\n",
+	    -exit_status => 0,
+	    -verbose => 0
+	   );
+}
+
+my $art_h = pm_fetch_pubmed(\@pmids);
+foreach my $id (keys %$art_h) {
+  print make_bibtex_citation($art_h->{$id});
+}

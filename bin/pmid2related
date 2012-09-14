@@ -1,0 +1,172 @@
+#! /usr/bin/perl -w
+
+#use lib "$ENV{HOME}/lib/biblio";
+use PubMed;
+use Globals;
+
+my $from_db = 'pubmed';
+my $to_db = 'pubmed';
+my $count_only = 0;
+my $n_best = 0;
+my $min_score = 0;		# Minimum relatedness score
+my $numdays = 0;
+my $operate_quietly = 0;
+my $n_columns = 2;
+
+my $usage = "Usage: pmid2related [<options>] [<pubmed identifier>+]
+
+If no PMIDs (PubMed identifiers) are provided on the commandline,
+then they are read from stdin instead. PMIDs from the input list is
+always removed from the output.
+
+Output is two columns with related PMID on the left and the
+relatedness score on the right.
+
+Options:
+   -u, -h, --help
+            This text.
+   -c       Only return the number of available linked entries.
+   -1       Only first column, no score.
+   -n <int> Limit to the best <int> related articles.
+   -m <int> Minimum relatedness score. A score below this is ignored.
+   -t <int> The number of days from today to include in search.
+
+   -q       Less verbose output.
+
+See also home page at http://www.nada.kth.se/~arve/biblio.
+";
+
+#
+# Removed those elements of list 1 that occur in list 2. The element
+# order is preserved.
+# In:  A hash ref and a list ref
+# Out: The hash ref, but elements from l2 removed
+#
+sub filter_list {
+  my ($l1, $l2) = @_;
+  my $i = 0;
+
+  foreach my $pmid (@$l2) {
+    delete $l1->{$pmid};
+  }
+
+  return $l1
+}
+
+
+#
+# Main
+#
+my @pmids = ();
+
+while (my $opt = shift @ARGV) {
+  if ($opt eq '-u' || $opt eq '-h' || $opt eq '--help') {
+    print STDERR $usage;
+    exit 0;
+  } elsif ($opt eq '-c') {
+    $count_only = 1;
+  } elsif ($opt eq '-1') {
+    $n_columns = 1;
+  } elsif ($opt eq '-m') {
+    if (@ARGV) {
+      my $int = shift @ARGV;
+      if ($int =~ /\d+/ && $int >= 0) {
+	$min_score = $int;
+      } else {
+	print STDERR "Argument to option '-m' must be an non-negative integer. Found '$int' instead.\n";
+	exit 2;
+      }
+    } else {
+      print STDERR "An integer is expected as an argument to option '-m'.\n";
+      exit 3;
+    }
+  } elsif ($opt eq '-n') {
+    if (@ARGV) {
+      my $int = shift @ARGV;
+      if ($int =~ /\d+/ && $int >= 0) {
+	$n_best = $int;
+      } else {
+	print STDERR "Argument to option '-n' must be an non-negative integer. Found '$int' instead.\n";
+	exit 2;
+      }
+    } else {
+      print STDERR "An integer is expected as an argument to option '-n'.\n";
+      exit 3;
+    }
+  } elsif ($opt eq '-t') {
+    if (@ARGV) {
+      my $int = shift @ARGV;
+      if ($int =~ /\d+/) {
+	$numdays = $int;
+      } else {
+	print STDERR "Argument to option '-t' must be an integer. Found '$int' instead.\n";
+	print STDERR $usage;
+	exit 3;
+      }
+    } else {
+      print STDERR "An integer is expected as an argument to option '-t'.\n";
+      print STDERR $usage;
+      exit 4;
+    }
+  } elsif ($opt =~ m/\d+/) {
+    push @pmids, $opt;
+  } elsif ($opt eq '-q') {
+    $operate_quietly = 1;
+  } elsif (!$operate_quietly) {
+    print STDERR "Cannot use command line argument: '$opt'\n";
+    exit 1;
+  }
+}
+
+
+if (scalar(@pmids) == 0) {
+  while (<>) {
+    if (/^(\s*[+-]?\s*)(\d+)/) {
+      if (length($1) < 5) {
+	push @pmids, $2;
+      }
+    }
+  }
+}
+
+if (scalar(@pmids) == 0) {
+  print STDERR "No PMIDs found.\n";
+  exit 0;
+}
+
+my $additional = '';
+if ($numdays > 0) {
+  $additional .= "reldate=$numdays";
+}
+
+my ($count, $h) = pm_fetch_linked($from_db, $to_db, \@pmids, $additional);
+if ($count_only) {
+  print $count, "\n";
+  exit 0;
+}
+
+if ($count > 0) {
+  filter_list($h, \@pmids);
+  my @res = sort {$h->{$b} <=> $h->{$a}} keys %$h;
+  if ($n_best > 0 && $count > $n_best) {
+    @res = @res[0..$n_best-1];
+  }
+
+  if ($n_columns == 2) {
+    foreach my $id (@res) {
+      my $score = $h->{$id};
+      if ($score >= $min_score) {
+	print $id, "\t", $score, "\n";
+      }
+    }
+  } else {
+    print join("\n", @res), "\n";
+  }
+
+} else {
+  if (!$operate_quietly) {
+    print STDERR "No related articles found.\n";
+  }
+}
+
+

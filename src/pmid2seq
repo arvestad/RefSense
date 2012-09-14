@@ -1,0 +1,139 @@
+#! /usr/bin/perl -w
+
+=pod
+=head1 NAME
+
+pmid2seq - Return sequences associated with a PubMed entry.
+
+=head1 SYNOPSIS
+
+    pmid2seq [<options>] <db> [<pubmed identifier>+]
+
+=head1 DESCRIPTION
+
+If no PMIDs, PubMed identifiers, are provided on the commandline,
+then they are read from stdin instead. The database specifier is
+one of nucleotide or protein.
+
+=head2 OPTIONS
+=over 4
+
+
+=item B<-u, -h, --help>
+
+            This text.
+
+=item B<-c>       
+
+Return the number of available linked sequences.
+
+=item B<-from>    
+
+The DB to link from, right now 'nucleotide' or 'protein'.
+
+=item B<-gb>      
+
+Output in GenBank sequence format. Fasta is default.
+
+=item B<-q>       
+
+Less verbose output.
+
+=head1 SEE ALSO
+
+See also home page at http://www.nada.kth.se/~arve/refsense.
+
+=cut
+
+use PubMed;
+use Globals;
+
+use Pod::Usage;
+use Pod::Text;
+
+my $from_db = 'pubmed';
+my $to_db = undef;
+my $count_only = 0;
+my $operate_quietly = 0;
+my $seqformat = 'fasta';
+
+my %Entrez_DB =
+  (
+   'nucleotide' => undef,
+   'pubmed_nucleotide' => undef,
+   'protein'    => undef,
+   'pubmed'     => undef,
+   'gene'       => undef,
+);
+
+my @pmids = ();
+
+if (scalar(@ARGV) == 0) {
+  pod2usage("No arguments given!\n");
+  exit 1;
+}
+
+while (my $opt = shift @ARGV) {
+  if ($opt eq '-u' || $opt eq '-h' || $opt eq '--help') {
+    pod2usage();
+    exit 0;
+  } elsif ($opt =~ m/-from/) {
+    if (scalar(@ARGV) > 1 && exists $Entrez_DB{$ARGV[0]})  {
+      $from_db = shift @ARGV;
+    }
+  } elsif ($opt eq '-gb') {
+    $seqformat = 'gb';
+  } elsif ($opt eq '-c') {
+    $count_only = 1;
+  } elsif ($opt =~ m/\d+/) {
+    if ($opt =~ m/(\d+(,\d+)+)/) {
+      push @pmids, split(/,/, $1);
+    } else {
+      push @pmids, $opt;
+    }
+  } elsif ($opt eq '-q') {
+    $operate_quietly = 1;
+  } elsif ($opt =~ m/\w+/ && exists $Entrez_DB{$opt}) {
+    $to_db = $opt;
+  } elsif (!$operate_quietly) {
+    print STDERR "Cannot use command line argument: '$opt'\n";
+    exit 1;
+  }
+}
+
+if (not defined($to_db)) {
+  pod2usage("No database defined! Please specify.\n");
+  exit 2;
+}
+
+if (scalar(@pmids) == 0) {
+  while (<>) {
+    if (/^(\s*[+-]?\s*)(\d+)/) {
+      if (length($1) < 5) {
+	push @pmids, $2;
+      }
+    }
+  }
+}
+
+if (scalar(@pmids) == 0) {
+  print STDERR "No PMIDs found.\n";
+  exit 0;
+}
+
+my ($count, $l) = pm_fetch_linked($from_db, $to_db, \@pmids);
+if ($count_only) {
+  print $count, "\n";
+  exit 0;
+}
+
+if ($count > 0) {
+  my @id_list = keys %$l;
+  my $retstr = pm_fetch({'db' => $to_db,
+			 'id' => \@id_list,
+			 'rettype' => $seqformat,
+			 'retmode' => 'text',
+			});
+  print $$retstr;
+}
+

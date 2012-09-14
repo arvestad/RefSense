@@ -1,0 +1,140 @@
+#! /usr/bin/perl -w
+
+=pod
+
+=head1 NAME
+
+taxtree - Assemble a Newick tree from the output of 'taxonomy'
+
+=head1 SYNOPSIS
+
+    taxonomy human pig mouse | taxtree
+
+=head2 OPTIONS
+
+=over 4
+
+=item B<-u, -h, --help>
+
+Full help text.
+
+=back
+
+=head1 DESCRIPTION
+
+Read lineages information on stdin and report a Newick tree on stdout.
+Only species or genus are included, higher order groups are discarded.
+
+The Newick format is specified at
+   http://evolution.genetics.washington.edu/phylip/newicktree.html
+By this specification, blanks are replaced by the underscore character.
+=cut
+
+use Data::Dumper;
+use Pod::Usage;
+
+if (scalar(@ARGV) > 0) {
+  my $opt = shift @ARGV;
+  if ($opt eq '-u' || $opt eq '-h' || $opt eq '--help') {
+    pod2usage(-verbose=>2);
+    exit 0;
+  } else {
+    pod2usage("Cannot use argument '$opt'");
+    exit 1;
+  }
+}
+
+my %hashtree=();
+my $species='';
+my $rank = '';
+while (<>) {
+  if (m/^Scientific\sName:\s+(.+)$/) {
+    $species = $1;
+    $species =~ s/\ /\_/g;
+  }
+  elsif (m/^\s+Rank:\s+(\S+)+/) {
+    $rank = $1;
+  }
+  elsif (m/^\s+Lineage:\s+(.+)$/) { 
+    if ($rank eq 'species'  || $rank eq 'genus' || $rank eq 'subspecies') {
+      my $h = \%hashtree;
+      foreach my $level (split(/;\s*/, $1)) {
+	if (exists $h->{$level}) {
+	  $h = $h->{$level};
+	} else {
+	  my %x = ();
+	  $h->{$level} = \%x;
+	  $h = $h->{$level};
+	}
+      }
+      $h->{$species} = '__leaf__';
+    }
+  }
+}
+
+my $root = \%hashtree;
+print treestring($root), ";\n";
+
+exit 0;
+
+sub treestring {
+  my $r = shift @_;
+
+  if (defined $r) {
+    my @levels = keys %$r;
+    my $count = scalar(@levels);
+    if ($count == 0) {
+      return undef;
+    } elsif ($count == 1) {
+      my $ret = treestring($r->{$levels[0]});
+      if (defined $ret) {
+	return $ret;
+      } else {
+	return $levels[0];
+      }
+    } else {
+      my @subtrees = ();
+      foreach my $level (@levels) {
+	my $subtree = treestring($r->{$level});
+	if (defined $subtree) {
+	  push @subtrees, $subtree;
+	} else {
+	  push @subtrees, $level;
+	}
+      }
+      return '('
+	. join(', ', @subtrees)
+	. ')';
+    }
+  }
+}
+
+# my $lca = 'Root of Life';
+
+# if (scalar(keys %lineages) < 2) {
+#   print STDERR "Only one species: $species\n";
+#   exit 0;
+# }
+
+# # Loop through the lineage lists for each species.
+# # As long as there is only one common lineage name,
+# # we continue, but when at least one species differs,
+# # we stop and print the last common lineage name.
+# while (1) {
+#   my $top;
+#   my %toplevels = ();
+#   foreach my $s (keys %lineages) {
+#     if (defined @{$lineages{$s}}) {
+#       $top = shift @{$lineages{$s}};
+#       $toplevels{$top} = undef;
+#     } else {
+#       $toplevels{$s} = undef;	# Use $s as a unique lineage name, since we are at the empty list
+#     }
+#   }
+#   if (scalar(keys(%toplevels)) > 1) {
+#     print $lca, "\n";
+#     exit 0;
+#   } else {
+#     $lca = $top;
+#   }
+# }

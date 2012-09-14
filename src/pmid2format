@@ -1,0 +1,180 @@
+#!/usr/bin/perl -w
+
+=head1 NAME
+
+pmid2format
+
+=head1 SYNOPSIS
+
+  pmid2format [--help] [--nows] [--nocaps] [--noinitials] [--remove=chars] [--replace=chars] format pmid1 .. pmidn
+
+    --help: this info
+    --nows: replaces whitespace with "_" in output
+    --nocaps: replaces capital letters with lower-case
+    --noinitials: tries to delete initials from author names
+    --remove=chars: removes all characters in chars
+    --replace=chars: replaces all characters in chars with "_"
+    --maxauthors <int>: Show at most NAUTHORS with the %a format.
+    format: string defining output format, available options:
+      %a: first maximum NAUTHORS authors or first author + "et al"
+      %A: all authors
+      %Y: four digit year
+      %y: two digit year
+      %j: journal
+      %t: title
+      %%: verbatim %
+      Options for which it makes sense (e.g. t and a) also takes a length 
+      specifier in printf style, so that %40t, prints the 40 first characters 
+      of the title.
+    pmid1 .. pmidn: pubmed identifier; in the absense of pmids as arguments, 
+      stdin is read
+
+=head1 DESCRIPTION
+
+=head1 AUTHOR
+
+daniel.lundin@molbio.su.se
+
+=cut
+
+use strict;
+
+use English;
+use Getopt::Long;
+use Pod::Usage;
+use PubMed;
+
+my $caps = 1;
+my $help = 0;
+my $initials = 1;
+my $remove = "";
+my $replace = "";
+my $nauthors = 2;
+my $ws = 1;
+
+my $WORD_SEPARATORS = '\.';     # What separates words when truncating
+
+# In this hash there is a reference to an anonymous sub stored for each
+# primitive format code (including '%'). The function takes a reference to an 
+# article, a length and a boolean for returning initials or not (the latter two
+# are only used in certain cases), and returns a formated string. 
+my %FORMAT_CODES = (
+  a => sub {
+    my ( $article, $length, $initials ) = @ARG;
+    my $r = "";
+    if ( $#{$article->{AU}} > $nauthors - 1 ) {
+      $r = "$article->{AU}->[0]";
+      $r =~ s/\s[A-Z]+// unless $initials;
+      $r .= " et al";
+    }
+    else {
+      $r = _authors($article, $initials);
+    }
+    return $r;
+  },
+  A => sub {
+    my ( $article, $length, $initials ) = @ARG;
+    return _authors($article, $initials);
+  },
+  Y => sub {
+    my ( $article, $length ) = @ARG;
+    return (_date_of_publication($article))[0];
+  },
+  y => sub {
+    my ( $article, $length ) = @ARG;
+    return substr((_date_of_publication($article))[0], 2, 2);
+  },
+  j => sub {
+    my ( $article, $length ) = @ARG;
+    return $article->{TA};
+  },
+  t => sub {
+    my ( $article, $length ) = @ARG;
+    my $t = $article->{TI};
+    $t =~ s/\.$//;
+    if ( $length ) {
+      return ( length($t) > $length ? substr($t, 0, $length) : $t );
+    }
+    return $t;
+  },
+  '%' => sub { return '%'; },
+);
+
+GetOptions(
+  "caps!" => \$caps,
+  "help!" => \$help,
+  "initials!" => \$initials,
+  "remove:s" => \$remove,
+  "replace:s" => \$replace,
+  "maxauthors:i" => \$nauthors,
+  "ws!" => \$ws,
+);
+
+pod2usage(0) if $help;
+
+my $format = shift(@ARGV);
+
+pod2usage({-msg => "I need a format string", -exitval => 1}) unless $format;
+
+my @pmids = @ARGV;
+unless ( $#pmids > -1 ) {
+  @pmids = split(/\s+/, <STDIN>);
+}
+
+my $articles = pm_fetch_pubmed(\@pmids);
+
+# Main loop
+foreach my $key ( keys %{$articles} ) {
+  print fmt($articles->{$key}, $format, $ws, $remove, $replace, $initials), "\n";
+}
+
+# This function does one half of the work: calling the anonymous
+# function stored in %FORMAT_CODES.
+sub fmt {
+  my ( $article, $format, $ws, $remove, $replace, $initials ) = @ARG;
+  my $return = $format;
+  foreach my $fmtc ( keys %FORMAT_CODES ) {
+    if ( $return =~ /%(\d*)$fmtc/ ) {
+      my $s = &{$FORMAT_CODES{$fmtc}}($article, $1, $initials);
+      $return =~ s/%\d*$fmtc/$s/g;
+    }
+  }
+
+  foreach my $r ( split(//, $remove) ) {
+    $r =~ s/[[\]()\/\\\?]/\\$MATCH/g;         # Certain things need to be escaped
+    $return =~ s/$r//g;
+  }
+
+  foreach my $r ( split(//, $replace) ) {
+    $r =~ s/[[\]()\/\\\?]/\\$MATCH/g;         # Certain things need to be escaped (should be done in a function, I guess
+    $return =~ s/$r/_/g;
+  }
+  $return =~ s/\s+/_/g unless $ws;
+
+  # Delete any duplicate "_"
+  $return =~ s/__+/_/g;
+
+  return lc($return) unless $caps;
+
+  return $return;
+}
+
+# Returns date of publication (from the 'DP' property) as an array
+sub _date_of_publication {
+  my ( $article ) = @ARG;
+  return split(/\s+/, $article->{DP});
+}
+
+# Returns all authors as a string, separated by what's in the second argument
+sub _authors {
+  my ( $article, $sep, $initials ) = @ARG;
+  $sep = " " unless defined $sep;
+
+  my $r = "";
+  foreach my $a ( @{$article->{AU}} ) {
+    $a =~ s/\s[A-Z]+// unless $initials;
+    $r .= ", " if $r;
+    $r .= $a;
+  }
+  return $r;
+}

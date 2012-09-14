@@ -1,0 +1,29 @@
+Here is how to install biblio for you own usage:
+
+1. Move the contents of lib to a lib directory under your
+   home directory, for example
+	mv lib/biblio ~/lib/
+   Set the environment variable PERL5LIB to point to this directory.
+   For example by executing
+	export PERL5LIB=$PERL5LIB:~/lib/
+   if you are a bash user.
+
+2. Move the executables to your bin directory, e.g.
+	mv bin/* ~/bin/
+
+3. Make sure that the Perl modules CGI and LWP are installed. This can be done
+   with the commands
+      perl -e 'require CGI;'
+   and 
+      perl -e 'require LWP;'
+   which should return with no output on success. Use CPAN, if it is
+   not installed (see www.cpan.org), by issuing the command
+      cpan -i LWP CGI
+
+4. Done.
+
+If you are installing for a department, it is basically the same
+procedure. Your sysadm knowns how to adapt these instructions!
+
+	Lars Arvestad <arve@nada.kth.se>
+

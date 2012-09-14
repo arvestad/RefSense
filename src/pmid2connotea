@@ -1,0 +1,138 @@
+#! /usr/bin/perl -w
+
+=pod
+=head1 NAME
+
+pmid2connotea - Add articles to your Connotea account
+
+=head1 SYNOPSIS
+
+    pmid2connotea [<pubmed identifier>+]
+
+=head1 DESCRIPTION
+
+If no PMIDs (PubMed identifiers) are provided on the commandline,
+then they are read from stdin instead. PMIDs from the input list is
+always removed from the output.
+
+
+
+=head2 OPTIONS
+
+=over 4
+
+=item B<< -u, -h, --help >>
+
+            This text.
+
+=item B<< -q >>
+
+Less verbose output.
+
+=head1 SEE ALSO
+
+See also home page at http://www.csc.kth.se/~arve/refsense.
+
+=cut
+
+use PubMed;
+use Globals;
+
+use Pod::Usage;
+use Pod::Text;
+
+my $operate_quietly = 0;
+
+#
+# Removed those elements of list 1 that occur in list 2. The element
+# order is preserved.
+# In:  A hash ref and a list ref
+# Out: The hash ref, but elements from l2 removed
+#
+sub filter_list {
+  my ($l1, $l2) = @_;
+  my $i = 0;
+
+  foreach my $pmid (@$l2) {
+    delete $l1->{$pmid};
+  }
+
+  return $l1
+}
+
+
+#
+# Main
+#
+my @pmids = ();
+my $badargs=0;
+
+my $opt;
+while ($opt = shift @ARGV) {
+  if ($opt eq '-u' || $opt eq '-h' || $opt eq '--help') {
+    pod2usage(-verbose=>2);
+    exit 0;
+  } elsif ($opt =~ m/\d+/) {
+    push @pmids, $opt;
+  } elsif ($opt eq '-q') {
+    $operate_quietly = 1;
+  } else {
+    $badargs++;
+  }
+}
+
+if ($badargs > 0) {
+  pod2usage("Cannot use command line argument: '$opt'\n");
+  exit 1;
+}
+
+if (scalar(@pmids) == 0) {
+  while (<>) {
+    if (/^(\s*[+-]?\s*)(\d+)/) {
+      if (length($1) < 5) {
+	push @pmids, $2;
+      }
+    }
+  }
+}
+
+
+if (scalar(@pmids) == 0) {
+  print STDERR "No PMIDs found.\n";
+  exit 0;
+}
+
+# Main
+my $arth = pm_fetch_pubmed(\@pmids);
+my $browser = 'htmlview';	# Default, because it works on my system...
+if (exists $ENV{'BIBLIO_BROWSER'}) { # Backward compatible
+  $browser = $ENV{'BIBLIO_BROWSER'};
+}
+if (exists $ENV{'REFSENSE_BROWSER'}) {
+  $browser = $ENV{'REFSENSE_BROWSER'};
+}
+
+for my $pmid (@pmids) {
+  my $doi = get_doi($arth->{$pmid});
+  if (defined $doi) {
+    my $actionurl = $Connotea . $ConnoteaAddDOI . $doi;
+    `$browser $actionurl`;
+  } else {
+    print STDERR "PMID $pmid does not have an associated DOI.\nConsider using pmid2www instead!\n";
+
+### Bummer! ###
+# I tried to submit a link to NCBI, but they only want to redirect, which
+# seems to confuse Connotea.
+#
+#     my $ncbiurl =  $arth->{$pmid}{'PubMedURL'};
+#     $ncbiurl =~ s/\&/\\&/g;
+#     my $actionurl=$Connotea . $ConnoteaAddURL . $ncbiurl;
+#     print STDERR $actionurl, "\n";
+#     `$browser $actionurl`;
+
+  }
+}
+
+
+
+

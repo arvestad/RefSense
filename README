@@ -1,0 +1,141 @@
+The Biblio system consist of a few perl scripts plus one simple
+convenient Bash-script for accessing PubMed from the command
+line. They allow for searching and viewing hits in the Medline
+database, and most importantly, also convert records to BibTeX. There
+are at least one other shell tool for doing these things but, hey, it
+was Not Invented Here! And besides, I like my solution and have
+further plans for it.
+
+The scripts are found in ~arve/bin. Here is a quick summary:
+
+pmsearch
+   -- Search Medline and have article identifiers (PMID) returned.
+
+pmid2text
+   -- Take PMIDs (on the command line or from STDIN) and retrieve the
+      entries as text in a couple of formats, including partial HTML
+      for building web pages with.
+
+pmid2bibtex
+   -- Works like pmid2text, but writes bibtex records to STDOUT.
+
+pubmed
+   -- This is a simple script that essentially executes 
+      "pmsearch search terms | pmid2text -a".
+
+pmid2seq
+   -- Download sequences from PubMed that are refereced, linked, to an
+      article. 
+
+I have appended the usage texts below. They are also available by
+using the "-u" flag. An important and practical feature (at least to
+me) is that Medline records are cached on your local computer (in /tmp
+actually), making repeated viewing very fast by reducing calls to
+PubMed. 
+
+Some examples:
+
+How many papers were published by von Heijne last year?
+>pmsearch -c year=2002 author=von+Heijne
+9
+
+List them:
+>pubmed year=2002 author=von+Heijne
+11976343   Vilar M et al (2002) "Insertion and topology of a plant viral
+           movement protein in the endoplasmic reticulum membrane."
+           J Biol Chem 277(26), 23447--23445
+
+12441395   Nilsson J, Persson B, Von Heijne G (2002) "Prediction of
+           partial membrane protein topologies using a consensus approach."
+           Protein Sci 11(12), 2974--2978
+[snip, 7 more]
+
+
+I am open to suggestions that would make theses tools more useful for you.
+
+   Cheers,
+   Lasse
+
+---------------------------------------------------------
+Usage: pmid2text [<options>] [<pubmed identifier>+]
+
+Options:
+  -u       This text.
+  -i       No indentation of citations.
+  -y       Sort by publication year.
+  -a       Show abstract.
+  -n <int> Max number of authors without using "et al". Set to
+           zero to show all authors.
+  -h       Output as HTML for inclusion on a web page.
+  -q       Quiet. No extraneous output.
+
+If no PMID is given on the command line, STDIN is read until EOF
+and parsed for PMID:s. The expected format is a PMID first on each
+line, possibly followed by a space and any string.
+
+----------------------------------------------------------
+
+Usage: pmid2bibtex [<option>] [<pubmed identifier>+]
+
+Options:
+  -u   This text.
+  -y   Sort by year.
+
+If no PMID is given on the command line, STDIN is read until EOF
+and parsed for PMID:s. The expected format is a PMID first on each
+line, possibly followed by a space and any string.
+
+----------------------------------------------------------
+
+
+Usage: pmsearch [<options>] <search terms>+
+
+OPTIONS
+
+  -u         This text.
+  -c         Return the number of matching items.
+  -d <int>   The maximum number of PMID:s to report. Default: 100.
+  -t <int>   The number of days from today to include in search.
+  -w <int>   Warn when more than <int> identifiers are returned. Default: 100.
+
+
+SEARCH TERMS
+
+A search terms is either a lone word that can match anything in a PubMed entry.
+The complete query is a conjunction of its terms.
+
+You can for example write 'pmsearch eisen yeast' and get back (at this writing) 31
+PubMed identifiers. You may also write these search terms using the PubMed qualifiers
+to specify to what record in an entry a term should match. For example, writing
+'pmsearch eisen[AU] yeast specifies that 'eisen' is an author. However, since the
+PubMed way of writing things is hard to remember (for me at least), a second way of
+qualifying terms is implemented. The general syntax in this case is:
+  <qualifier>=<term>
+where <qualifier> is one of
+  author
+  abstract
+  journal
+  title
+  year
+The previous example is then written as 'pmsearch author=eisen yeast'.
+
+The journal titles can be hard to get right. Use either their full names (e.g.
+'Molecular Biology and Evolution') or the official abbreviation ('Mol Biol Evol').
+See the PubMed WWW site for details. In addition to the official abbreviations,
+pmsearch recognizes some additional common acronyms, which is translated to a name
+recognized by PubMed. Currently implemented are:
+
+      Key   Journal
+      psb = Pac Symp Biocomput
+      jmb = J Mol Biol
+     ismb = Proc Int Conf Intell Syst Mol Biol
+      jme = J Mol Evol
+      nar = Nucleic Acids Res
+      mbe = Mol Biol Evol
+     embo = EMBO J
+     pnas = Proc Natl Acad Sci U S A
+   cabios = Comput Appl Biosci
+      jcb = J Comput Biol
+
+
+

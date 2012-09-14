@@ -1,0 +1,33 @@
+#! /bin/sh
+
+usage() {
+  echo `basename $0` ": a wrapper script that invokes 'pmsearch <search terms> | pmid2text'"
+  echo
+  echo "  Usage instructions for pmsearch:"
+  echo
+  pmsearch -u
+}
+
+# Check that we have at least one param
+if [ -z "$1" ]; then
+  echo "You provided no search terms"
+  usage
+  exit
+fi
+
+# Something looking like the user needs help?
+if [ `echo $1 | egrep "^-+[hu?]"` ]; then
+  usage
+  exit
+fi
+
+while [ ! -z "$1" ]; do
+  opts="$opts "`echo "$1" | sed 's/ /+/g'`
+  shift
+done
+# First execute the search and retrieve results.
+# The output is written both to STDOUT and to a cache
+# file in the user's home directory so that we can
+# do completion on it using pmcomplete.
+pmsearch -w 40 $opts | pmid2text -q | tee ~/.biblio
+

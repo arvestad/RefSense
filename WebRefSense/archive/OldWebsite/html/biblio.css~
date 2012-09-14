@@ -1,0 +1,60 @@
+body	{ 
+	background: #66CCFF;
+}
+div.narrow {
+	margin-left: 10%; 
+	margin-right: 20%
+}
+div.prim {
+	margin: 0%;
+}
+h1	{
+	text-align: center;
+}
+h2	{
+	text-align: left;
+	background: #FF9900;
+}
+h3	{
+	text-align: left;
+	background: #FF9900;
+}
+address {
+	text-align: center;
+	background: #FF9900;
+}
+th { font-family: sans-serif; background: #FF9900 }
+td { background: #66CCFF }
+
+div.meny	{
+	text-align:	left;
+	border: none;
+}
+
+span.articlebutton {
+	background: #000000;
+	color:	#FFFFFF;
+	font-family:	sans-serif;
+	font-size:	small;
+}
+div.articlelinks	{
+	text-align: right;
+}
+div.articlelinks a{
+	color:	#66ccff;
+	text-decoration: none;
+}
+
+div.logo	{
+	padding:	0.5em;
+}
+
+div.logo a {
+	decoration: none;
+}
+
+img.screenshot	{
+	background: white;
+	padding: 1ex;
+	margin-right: -10%;
+}

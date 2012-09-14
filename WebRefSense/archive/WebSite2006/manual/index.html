@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <link rel="stylesheet" href="/biblio.css">
+    <title>RefSense Manual</title>
+  </head>
+
+  <body>
+<div class="narrow">
+<a href="/cgi-bin/biblio" ><img src="refsense.png" border=0></a>
+    <h1>Manual</h1>
+
+<a href="/cgi-bin/biblio">RefSense</a> is a simple interface to PubMed together with a small set of
+convenience functions. The target audience is users of 
+<a href="http://www.tug.org/">TeX</a>/
+<a href="http://tex.loria.fr/index.html">LaTeX</a> and BibTeX who
+frequently access
+<a href="http://www.ncbi.nlm.nih.gov/PubMed/">PubMed</a> and do not enjoy
+other ways of converting citations into BibTeX format.
+<p>
+<h2>Searching</h2>
+<img align="right" src="searching.png" border=3>
+There are two ways of enter search terms. The first is the simplest,
+allowing you to enter simple search words just like at PubMed. You can
+use all qualifiers that are available at PubMed to restrict search
+terms and construct advanced queries as well. 
+<p>
+The 'complex search' offers convenient text boxes where you can
+construct a more precise query without the PubMed qualifiers. The text
+boxes are mostly self-explanatory, but it is helpful to know that
+several author names are comma-delimited, and that journal names or
+their correct abbreviations should be spelled out fully.
+
+<br clear=both>
+
+<h2>Search results</h2>
+<img align="right" src="searchres.png" border=3>
+If the search is successful, a result list is viewed and you can
+choose which ones are to be kept in a list while searching for other
+citations.
+<p>
+Sometimes, the author names have a link. This happens when the
+Medline entry has an email address in the affiliation field. We can
+unfortunately not automatically connect the adress to an individual
+author, but you as a user can probably make educated guesses. 
+<p>
+When the Medline entry contains a URL:s for the article, the article
+title will be linked as well. Please notice that the URL:s can
+sometimes be outdated!
+<p>
+If you are only interested in one citation, you also have some options
+in the article's quick-buttons. 
+
+<h2>Article buttons</h2>
+    <dl>
+	<dt><img src="drop.png" alt="Drop!">
+	<dd>Remove article from the current listing.
+	<dt><img src="bibtex.png" alt="BibMed">
+	<dd>Popup a window with the article's BibTeX entry.
+	<dt><img src="pubmed.png" alt="PubMed">
+	<dd>Popup a PubMed window for that article. This view contains the abstract.
+	<dt><img src="websearch.png" alt="WebSearch">
+	<dd>Use article data to construct a web search using <a href="http://google.com">Google</a> or <a href="http://citeseer.nj.nec.com">ResearchIndex</a>. The former is suitable to find online versions of an article or the author homepages. ResearchIndex is an excellent search engine indexing the computer science literature available on the Web.
+	<dt><img src="bibsearch.png" alt="BibSearch">
+	<dd>Let article data form the basis for a new search using RefSense.
+	<dt><img src="trawler.png" alt="Trawler">
+	<dd>Bring this article over to the <a href="http://genelynx.org/trawler">Trawler</a> system.
+    </dl>
+
+<br clear=both>
+<h2>General tools</h2>
+<img align="right" src="gentools.png" border=3>
+Right now there is only one general tool: Empty the list of
+references. This is an easy way to start over. Notice that sessions
+are persistent if you stay at one computer since the list of articles
+is saved in a browser cookie.
+
+<br clear=both>
+<h2>Converters</h2>
+<img align="right" src="converters.png" border=3>
+
+When you have assembled a list of references, you can use the
+'Converters' menu on the left to format them for either BibTeX, a text
+document (email), or HTML.
+<p>
+There is also an option called 'RefSense link' that offers a simple URL
+to be pasted into for example an email. That link also illustrates how
+to construct a URL to RefSense that brings up a set of citations. Simply
+add a string of the form 
+<pre>?pmid=&lt;ID1&gt;,&lt;ID2&gt;,...</pre>
+where the 
+<code>'&lt;IDn&gt;'</code>
+are PubMed identifiers, after RefSense's URL.
+
+<br clear=both>
+
+<h2>Exporting</h2>
+<img align="right" src="export.png" border=3>
+The Export menu allows you to bring up the list of articles in another
+system --- PubMed, Trawler, and via an options page (WebSearch), 
+<a href="google.com">Google</a> or 
+<a href="citeseer.nj.nec.com">ResearchIndex</a>.
+
+
+<br clear=both>
+
+    <hr>
+    <address><a href="mailto:Lars.Arvestad@cgr.ki.se">Lars Arvestad</a></address>
+<!-- Created: Thu Aug 16 13:12:27 CEST 2001 -->
+<!-- hhmts start -->
+Last modified: Mon Apr 10 08:37:00 CEST 2006
+<!-- hhmts end -->
+</div>
+  </body>
+</html>

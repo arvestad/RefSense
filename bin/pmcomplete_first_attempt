@@ -1,0 +1,11 @@
+#! /usr/bin/perl -w
+
+# This script will identify all incoming PMIDs and make sure they are
+# autocompletable by bash, and possibly other shells. At the moment,
+# only Bash support is implemented.
+
+
+# In:  A list of pmid:s
+# Res: 
+sub program_bash {
+  

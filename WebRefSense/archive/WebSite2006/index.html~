@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML Basic 1.0//EN"
+	"http://www.w3.org/TR/xhtml-basic/xhtml-basic10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<head>
+  <title>RefSense - Welcome</title>
+  <link rel="stylesheet" type="text/css" href="biblio.css" />
+    <meta name="keywords" content="biblio,pubmed,bibtex,references,convert,display">
+</head>
+<body><table width="100%" class="layout"><tr><td valign="top">
+<div class="logo">
+  <a href=".">
+     <img alt="Biblio" border="0" src="manual/refsense.png" />
+  </a> 
+</div><br />
+<h3>&nbsp;Information</h3><a target="_blank" href="manual/">Manual</a><br><a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/utils/utils_index.html">Entrez Utilities</a></td> <td valign="top">
+<h1>Welcome to RefSense</h1><p>Search PubMed through the RefSense interface!</p>
+<table width="100%"><form method="post" action="http://www.sbc.su.se/~arve/refsense/biblio.cgi" enctype="application/x-www-form-urlencoded">
+<tr><th align="left" colspan="6">Simple search
+<tr><td>Term </td>
+<td colspan="3"><input type="text" name="term"  size="60" /></td><td><select name="narticles">
+<option  value="10">10</option>
+<option selected value="20">20</option>
+<option  value="40">40</option>
+<option  value="60">60</option>
+<option  value="80">80</option>
+<option  value="100">100</option>
+</select>
+</td><td><input type="submit" name="Search" value="Search" /></td></tr><input type="hidden" name="mode" value="search" />
+</form><form method="post" action="biblio.cgi" enctype="application/x-www-form-urlencoded">
+<tr><th align="left" colspan="6">Complex search</th>
+
+<tr><td>Author(s) </td>
+<td colspan="4"><input type="text" name="author"  size="70" /></td><td><input type="submit" name="Search" value="Search" /></td>
+<tr><td>Title words </td>
+<td colspan="5"><input type="text" name="title"  size="70" />
+<tr><td>Journal </td><td><input type="text" name="journal"  size="30" /></td><td>Year </td><td><input type="text" name="year"  size="4" maxlength="4" /></td><td>Max # hits</td><td><select name="narticles">
+<option  value="10">10</option>
+<option selected value="20">20</option>
+<option  value="40">40</option>
+<option  value="60">60</option>
+<option  value="80">80</option>
+<option  value="100">100</option>
+</select>
+</td></table><input type="hidden" name="mode" value="search" />
+</form>
+</td></tr> <tr><td colspan="2">
+ <address>
+   For bug reports, feature requests, wild praise, et.c., please contact
+   <a href="mailto:arve@csc.kth.se">Lars Arvestad</a>
+ </address>
+</td></tr></table></body></html>

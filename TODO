@@ -1,0 +1,114 @@
+======= To do =======
+
++ Varför kan jag skriva
+	 pubmed title=viewer title=reconciled
+	 17484781   Sennblad B et al (2007) "primetv: a viewer for reconciled
+		    trees." BMC Bioinformatics 8, 148
+  men inte
+         pubmed title=viewer+for+reconciled
+  för samma resultat?
+
++ pmid2www borde kunna användas i pipeline!
+  I så fall måste jag greppa med 
+	grep  -e "^\ \{0,10\}[0-9]\+"
+  följt av utplockning av första kolumn för att få precis PMID och inget annat.
+
++ Döp om till RefSense (eller bibbi, pm2u, etc...)
+
++ refsense-store: Ungefär som pmid2text, men som sparar undan artikeln
+  i ett separat lager. Detta lager kan sedan användas för completion
+  också! Och sökning naturligtvis.
+
++ pmid2seq does not find references marked "^SI" in the Medline
+  record! Must search PubMed for related sequences *and* look for the
+  SI tag.
+
++ Finish pmgrep
+
++ Clear out Globals.pm!
+
++ Använd h2xs och gör en riktig CPAN-modul.
+
++ pmsearch tankar ner en hel XML-fil innan den börjar parse:a
+  PMID. Det gör att med många PMID så tar det lååång tid.
+  Björn S försökte med 
+    pmsearch -d 400000 cell+line | pmid2text -a
+  och det gick inte så bra.
+
++ Koppla in Google Scholar? 
+
++ Kolla in CiteBase: citebase.eprints.org
+
++ Add support for the FAU (Full Author Name) and FPS fields (Full
+  Personal Name).
+  See http://www.nlm.nih.gov/pubs/techbull/ma03/ma03_2003_pubmed_changes.html
+
++ Send article (-recommendation) via email.
+
+=== Taken care of ===
+
++ Jens suggested completion on journal names.
+  See journalcomplete.
+
+  Was:
+  Idea: have personal lists of journal names in ~/.refsense_journals.
+  First column is a string that PubMed recognizes, second column is
+  optional and is a synonym. For example:
+	   Proc Int Conf Intell Syst Mol Biol,	ismb
+	   Nucleic Acids Research,    nar
+
++ Need option to *not* save cached medline entries. /tmp can easily fill up!
+  Implemented the environment variable REFSENSE_DONT_CACHE.
+
++ taxtree
+  To augment lca and taxonomy. Use a hierachical hash table and insert
+  all levels of the taxonomy. Then descend the hierarchy and construct a tree.
+
++ Make 'taxonomy' an official command. See the RefSense directory.
+  Also consider 'lca', also in the RefSense directory!
+
++ Introduce abbreviations for author (au), title (ti), etc.
+
++ MUST handle browser choise in pmid2www better! Document how to use BIBLIO_BROWSER!
+
++ Använd htmlview om det finns i sökvägen! Kan då dumpa
+  BIBLIO_BROWSER. Implementerat i ~/bin/pmid2www.
+
++ "pmid2www -h" öppnar en tom websida. 
+
++ Verkar fixat i senaste "RefSense":
+  Completion efter kommandot "pubmed author=von+heijne year=2005" är
+  buggat! I första referensen, Hessa et al, hittar man "1427" ensamt
+  på en rad. Detta inkluderas i completion!
+
++ Works fine:
+  Verify that "tee" can replace
+    pmsearch -w 40 $* | pmid2text -q | awk '{print >ENVIRON["HOME"]"/.biblio"; print >"/dev/stdout"}'
+
++ Documented the solution to use $ as "finished-word token". Was:
+  pmcomplete makes mistakes. Consider for instance completion on
+  "family" when both "family" and "subfamily" are present.
+  Also, "membrane" och "transmembrane" can never finish and turn into
+  a list of PMID:s.
+
++ First ideas:
+     If a pmid2* command is writing to the terminal, then the result
+     should also be written to ~/.pmids, unless a flag (e.g., '-nosave') is set.
+  and 
+     A filter program with autocompletion on PMIDs. Maybe a bash subshell?
+  This is however superseded by pmcomplete and search caching in 'pubmed'.
+
++ Mentioned CGI.pm requirement in installation notes.
+
++ Four-digit year in bibtex key.
+
++ Include PMID in bibtex reference. How?
+
++ Install a module at SBC with Biblio, so people don't rely on my home dir.
+
++ Fixed by Einar Andreas Rödland:
+  Bug:  pubmed author=barabasi author=albert journal=science
+  Ger:  10521342   Barabasi AL, Albert R (1999) "Emergence of scaling in random networks" Science 286(5439), 509-512
+
+	10521342
+

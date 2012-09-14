@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Script that returns (my style) filenames for articles given their Pubmed id:s.
+#
+# It's just a wrapper around pmid2format.
+#
+# daniel.lundin@molbio.su.se
+
+pmid2format --noinitials --replace=- --remove=:,\?\"\'\(\) --nows --nocaps "%a_%Y.%t" $*

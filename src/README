@@ -1,0 +1,54 @@
+RefSense version 1.0
+====================
+
+The RefSense system consist of a few perl scripts plus one simple
+convenient Bash-script for accessing PubMed from the command
+line. They allow for searching and viewing hits in the Medline
+database, and most importantly, also convert records to BibTeX. There
+are at least one other shell tool for doing these things but, hey, it
+was Not Invented Here! And besides, I like my solution and have
+further plans for it.
+
+The scripts are found in ~arve/bin. Here is a quick summary:
+
+pmsearch
+   -- Search Medline and have article identifiers (PMID) returned.
+
+pmid2text
+   -- Take PMIDs (on the command line or from STDIN) and retrieve the
+      entries as text in a couple of formats, including partial HTML
+      for building web pages with.
+
+pmid2bibtex
+   -- Works like pmid2text, but writes bibtex records to STDOUT.
+
+pubmed
+   -- This is a simple script that essentially executes 
+      "pmsearch search terms | pmid2text -a".
+
+pmid2seq
+   -- Download sequences from PubMed that are refereced, linked, to an
+      article. 
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+This module requires these other modules and libraries:
+
+  CGI and LWP
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2005 Lars Arvestad
+
+This library is distributed under the GNU Public Licence. Other licences 
+can be negotiated with the author.
+

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://inkscape.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.43"
+   sodipodi:docbase="/afs/nada.kth.se/home/theory/arve/src/biblio/WebSite2006/manual"
+   sodipodi:docname="refsense.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1"
+     inkscape:cx="375"
+     inkscape:cy="660"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     inkscape:window-width="1215"
+     inkscape:window-height="990"
+     inkscape:window-x="58"
+     inkscape:window-y="0" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       sodipodi:type="arc"
+       style="fill:#ff8e00;fill-opacity:1"
+       id="path1307"
+       sodipodi:cx="341.42856"
+       sodipodi:cy="329.50504"
+       sodipodi:rx="190"
+       sodipodi:ry="88.571426"
+       d="M 531.42856 329.50504 A 190 88.571426 0 1 1  151.42856,329.50504 A 190 88.571426 0 1 1  531.42856 329.50504 z"
+       transform="matrix(-0.906307,0.422619,-0.422619,-0.906307,629.1226,271.8437)" />
+    <text
+       xml:space="preserve"
+       style="font-size:56px;font-style:oblique;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="77"
+       y="122.36218"
+       id="text2214"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2216"
+         x="77"
+         y="122.36218">Ref</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:56px;font-style:oblique;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="83"
+       y="157.36218"
+       id="text2218"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2220"
+         x="83"
+         y="157.36218">Sense</tspan></text>
+  </g>
+</svg>
