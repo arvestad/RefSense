@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Refsense : Easy access to PubMed" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Refsense</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/arvestad/RefSense">View on GitHub</a>
+
+          <h1 id="project_title">Refsense</h1>
+          <h2 id="project_tagline">Easy access to PubMed</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/arvestad/RefSense/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/arvestad/RefSense/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p>The RefSense system consist of programs for accessing PubMed from the command
+line. They allow for searching and viewing hits in the PubMed
+database, find related articles, convert to BibTeX (convenient for LaTeX users), and much more by only using a keyboard. And you can get convenient word completion on titles, author names, etc, as well!</p>
+
+<h2>Some available commands</h2>
+
+<h4>pmsearch</h4>
+
+<p>Search Medline and have article identifiers (PMID) returned.</p>
+
+<h4>pmid2text</h4>
+
+<p>Take PMIDs (on the command line or from STDIN) and retrieve the
+      entries as text in a couple of formats, including partial HTML
+      for building web pages with.</p>
+
+<h4>pmid2bibtex</h4>
+
+<p>Works like pmid2text, but writes bibtex records to STDOUT.</p>
+
+<h4>pubmed</h4>
+
+<p>This is a simple script that essentially executes 
+      "pmsearch search terms | pmid2text -a".</p>
+
+<h4>pmid2seq</h4>
+
+<p>Download sequences from PubMed that are refereced, linked, to an
+      article. </p>
+
+<p>I have appended the usage texts below. They are also available by
+using the "-u" flag. An important and practical feature (at least to
+me) is that Medline records are cached on your local computer (in /tmp
+actually), making repeated viewing very fast by reducing calls to
+PubMed. </p>
+
+<p>Some examples:</p>
+
+<p>How many papers were published by von Heijne last year?</p>
+
+<pre><code>&gt;pmsearch -c year=2002 author=von+Heijne
+9
+</code></pre>
+
+<p>List them:</p>
+
+<pre><code>&gt;pubmed year=2002 author=von+Heijne
+11976343   Vilar M et al (2002) "Insertion and topology of a plant viral
+           movement protein in the endoplasmic reticulum membrane."
+           J Biol Chem 277(26), 23447--23445
+
+12441395   Nilsson J, Persson B, Von Heijne G (2002) "Prediction of
+           partial membrane protein topologies using a consensus approach."
+           Protein Sci 11(12), 2974--2978
+[snip, 7 more]
+</code></pre>
+
+<p>I am open to suggestions that would make theses tools more useful for you.</p>
+
+<p>Cheers,
+   Lasse</p>
+
+<hr><pre><code>Usage: pmid2text [&lt;options&gt;] [&lt;pubmed identifier&gt;+]
+
+Options:
+  -u       This text.
+  -i       No indentation of citations.
+  -y       Sort by publication year.
+  -a       Show abstract.
+  -n &lt;int&gt; Max number of authors without using "et al". Set to
+           zero to show all authors.
+  -h       Output as HTML for inclusion on a web page.
+  -q       Quiet. No extraneous output.
+
+If no PMID is given on the command line, STDIN is read until EOF
+and parsed for PMID:s. The expected format is a PMID first on each
+line, possibly followed by a space and any string.
+
+----------------------------------------------------------
+
+Usage: pmid2bibtex [&lt;option&gt;] [&lt;pubmed identifier&gt;+]
+
+Options:
+  -u   This text.
+  -y   Sort by year.
+
+If no PMID is given on the command line, STDIN is read until EOF
+and parsed for PMID:s. The expected format is a PMID first on each
+line, possibly followed by a space and any string.
+
+----------------------------------------------------------
+
+
+Usage: pmsearch [&lt;options&gt;] &lt;search terms&gt;+
+
+OPTIONS
+
+  -u         This text.
+  -c         Return the number of matching items.
+  -d &lt;int&gt;   The maximum number of PMID:s to report. Default: 100.
+  -t &lt;int&gt;   The number of days from today to include in search.
+  -w &lt;int&gt;   Warn when more than &lt;int&gt; identifiers are returned. Default: 100.
+
+
+SEARCH TERMS
+
+A search terms is either a lone word that can match anything in a PubMed entry.
+The complete query is a conjunction of its terms.
+
+You can for example write 'pmsearch eisen yeast' and get back (at this writing) 31
+PubMed identifiers. You may also write these search terms using the PubMed qualifiers
+to specify to what record in an entry a term should match. For example, writing
+'pmsearch eisen[AU] yeast specifies that 'eisen' is an author. However, since the
+PubMed way of writing things is hard to remember (for me at least), a second way of
+qualifying terms is implemented. The general syntax in this case is:
+  &lt;qualifier&gt;=&lt;term&gt;
+where &lt;qualifier&gt; is one of
+  author
+  abstract
+  journal
+  title
+  year
+The previous example is then written as 'pmsearch author=eisen yeast'.
+
+The journal titles can be hard to get right. Use either their full names (e.g.
+'Molecular Biology and Evolution') or the official abbreviation ('Mol Biol Evol').
+See the PubMed WWW site for details. In addition to the official abbreviations,
+pmsearch recognizes some additional common acronyms, which is translated to a name
+recognized by PubMed. Currently implemented are:
+
+      Key   Journal
+      psb = Pac Symp Biocomput
+      jmb = J Mol Biol
+     ismb = Proc Int Conf Intell Syst Mol Biol
+      jme = J Mol Evol
+      nar = Nucleic Acids Res
+      mbe = Mol Biol Evol
+     embo = EMBO J
+     pnas = Proc Natl Acad Sci U S A
+   cabios = Comput Appl Biosci
+      jcb = J Comput Biol
+
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Refsense maintained by <a href="https://github.com/arvestad">arvestad</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
