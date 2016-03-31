@@ -1,0 +1,61 @@
+#! /usr/bin/perl -w
+
+=pod
+
+=head1 NAME
+
+taxcomplete - Taxonomy interaction with shell completion system
+
+=head1 SYNOPSIS
+
+    taxcomplete <progname> <string> <string>
+
+=head1 DESCRIPTION
+
+This utility is intended to be used by the completion system in BASH
+and in conjunction with the command 'taxonomy'. Typical usage is instruct
+BASH as follows:
+
+   complete -C taxcomplete taxonomy
+
+=head1 SEE ALSO
+
+See also home page at http://www.csc.kth.se/~arve/code/refsense.
+
+=cut
+
+my $fragment=$ARGV[1];		# The little string to match
+if (length($fragment) == 0) {	# Nothing to match
+  exit(0);
+}
+
+$fragment =~ s/\+/\ /g;
+
+open(F, "<$ENV{HOME}/.refsense_taxonomy")
+  || exit(0);
+
+my @entry = ();			# Stored matched entries here.
+my %synonyms = ();
+
+
+while (<F>) {
+  my $taxa;
+
+  if (m/^(.+)$/) {
+    $taxa = $1;
+
+    if ($taxa =~ m/$fragment/i) {
+      push @entry, $taxa;
+    }
+  }
+}
+
+if (scalar(@entry) == 0) {	
+  # Nothing! No match at all
+}  elsif (scalar(@entry) == 1) { # We are done
+  print $entry[0], "\n";
+} else {			# Show what you've got
+  foreach my $e (@entry) {
+   print $e, "\n";
+  }
+}
