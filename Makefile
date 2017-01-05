@@ -10,7 +10,7 @@ distr:
 	mkdir ${DISTRDIR}/bin
 	mkdir ${DISTRDIR}/lib
 
-	cp ${srcdir}/INSTALL ${srcdir}/README ${srcdir}/Changes ${DISTRDIR}
+	cp ${srcdir}/INSTALL ${srcdir}/README ${srcdir}/CHANGES ${DISTRDIR}
 	cp -r ${srcdir}/*.pm ${DISTRDIR}/lib/
 
 	cd ${srcdir}; cp ${PUBLIC_APPS} ../${DISTRDIR}/bin
