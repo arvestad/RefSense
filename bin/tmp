@@ -1,5 +1,0 @@
-#! /usr/bin/perl -w
-
-my @a=(1, 4, 2, 3);
-my $x=2;
-print join (', ', @a[0..$x-1]);
