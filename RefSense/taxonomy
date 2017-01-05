@@ -100,8 +100,10 @@ if (! defined $res) {
 
 
 my $data = XMLin($res, GroupTags => {IdList => Id});
+#print STDERR "\nData from XLMin: ", Dumper($data), "\n";
 
-if (scalar($data->{IdList}) == 0) {
+my $n_identifiers = scalar($data->{IdList});
+if ($n_identifiers == 0) {
   print STDERR "No matching species or lineages.\n";
   exit 2;
 }
