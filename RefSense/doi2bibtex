@@ -1,0 +1,59 @@
+#! /bin/sh
+
+usage() {
+  echo `basename $0` ": retrieve BiBTeX from dx.doi.org given one or several DOI."
+  echo
+  echo "Example: "
+  echo "    $ doi2bibtex 10.1186/s12859-016-1268-2  10.1089/cmb.2016.0124"
+  echo "@article{Khan_2016,
+	doi = {10.1186/s12859-016-1268-2},
+	url = {https://doi.org/10.1186%2Fs12859-016-1268-2},
+	year = 2016,
+	month = {nov},
+	publisher = {Springer Nature},
+	volume = {17},
+	number = {S14},
+	author = {Mehmood Alam Khan and Owais Mahmudi and Ikram Ullah and Lars Arvestad and Jens Lagergren},
+	title = {Probabilistic inference of lateral gene transfer events},
+	journal = {{BMC} Bioinformatics}
+}
+@article{Sahlin_2016,
+	doi = {10.1089/cmb.2016.0124},
+	url = {https://doi.org/10.1089%2Fcmb.2016.0124},
+	year = 2016,
+	month = {sep},
+	publisher = {Mary Ann Liebert Inc},
+	author = {Kristoffer Sahlin and Mattias Fr{\\\\aa}nberg and Lars Arvestad},
+	title = {Structural Variation Detection with Read Pair Information: An Improved Null Hypothesis Reduces Bias},
+	journal = {Journal of Computational Biology}
+}"
+
+}
+
+# Check that we have at least one param
+if [ -z "$1" ]; then
+  echo "You provided no DOI"
+  usage
+  exit
+fi
+
+# Something looking like the user needs help?
+if [ `echo $1 | egrep "^-+[hu?]"` ]; then
+  usage
+  exit
+fi
+
+while [ ! -z "$1" ]; do
+    F=$(mktemp)
+    curl -s -L -H "Accept:application/x-bibtex" http://dx.doi.org/$1 > $F 
+    if grep -q 'DOI Not Found' $F; then
+	>&2 echo "Error: "$1" not found"
+    else
+	cat $F
+	echo
+    fi
+    shift
+    rm  $F
+done
+
+
