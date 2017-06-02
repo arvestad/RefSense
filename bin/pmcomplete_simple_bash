@@ -1,7 +1,0 @@
-#! /bin/sh
-
-if (($# == 2)); then
-    cat ~/.pmid
-else				# ($# == 3)
-    grep ^$2 ~/.pmid
-fi
