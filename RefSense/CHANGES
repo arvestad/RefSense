@@ -1,4 +1,9 @@
 -*- mode: text -*-
+
+From 1.2 to 1.2.2
++ Added new tool: doi2bibtex. Idea from Alper Sarikaya via Twitter.
++ Added new tool: taxcomplete, for getting help with species names in taxtree and lca.
+
 From 0.6 to 1.2
 + Cleanup and imrpovements that I have lost track of...
 
